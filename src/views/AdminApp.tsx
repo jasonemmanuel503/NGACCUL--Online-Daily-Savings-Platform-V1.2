@@ -1989,6 +1989,7 @@ export const AdminApp: React.FC<AdminAppProps> = ({
   const [showHighlightPopover, setShowHighlightPopover] = useState(false);
   const [selectedHr, setSelectedHr] = useState<HTMLHRElement | null>(null);
   const [isEditorScrolled, setIsEditorScrolled] = useState(false);
+  const [showClearDraftConfirm, setShowClearDraftConfirm] = useState(false);
 
   // Loan Config State
   const [loanConfig, setLoanConfig] = useState<{ id: string; interest_rate_pct: number; min_savings_fcfa: number; loan_approval_threshold_fcfa: number } | null>(null);
@@ -16855,19 +16856,10 @@ function getAdminAudioContext(): AudioContext | null {
                         <button
                           type="button"
                           onClick={() => {
-                            if (window.confirm("Are you sure you want to clear the current draft? This will discard your unsaved edits.")) {
-                              if (editorRef.current) {
-                                editorRef.current.innerHTML = "";
-                              }
-                              setSelectedFontFamily("Inter");
-                              setSelectedFontSize("12");
-                              setLineHeight("1.6");
-                              setLetterSpacing("0");
-                              setTextColor("#ffffff");
-                              setHighlightColor("#fbbf24");
-                              setHighlightOpacity(35);
-                              syncContent();
-                            }
+                            setShowTextColorPopover(false);
+                            setShowHighlightPopover(false);
+                            setShowContextMenu(false);
+                            setShowClearDraftConfirm(true);
                           }}
                           className="w-full sm:w-auto px-4 py-3 font-bold text-rose-300 hover:text-white bg-rose-950/20 hover:bg-rose-900/40 rounded-xl transition-all cursor-pointer font-sans text-xs uppercase tracking-wider border border-rose-500/25"
                         >
@@ -21567,6 +21559,28 @@ function getAdminAudioContext(): AudioContext | null {
             setCashConfirmState(null);
           }
         }}
+      />
+      <ConfirmModal
+        isOpen={showClearDraftConfirm}
+        title="Clear Draft"
+        message="Are you sure you want to clear the current draft? This will discard your unsaved edits."
+        confirmLabel="Clear Draft"
+        cancelLabel="Cancel"
+        onConfirm={() => {
+          if (editorRef.current) {
+            editorRef.current.innerHTML = "";
+          }
+          setCurrentEditorContent("");
+          setSelectedFontFamily("Inter");
+          setSelectedFontSize("12");
+          setLineHeight("1.6");
+          setLetterSpacing("0");
+          setTextColor("#ffffff");
+          setHighlightColor("#fbbf24");
+          setHighlightOpacity(35);
+          setShowClearDraftConfirm(false);
+        }}
+        onCancel={() => setShowClearDraftConfirm(false)}
       />
       <GlobalLoading 
         isLoading={isTermsPublishing || isBroadcasting || isRegisteringClient} 
