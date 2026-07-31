@@ -9,9 +9,9 @@ export function isValidName(val: string): boolean {
 export function isValidPhone(val: string): boolean {
   if (!val) return false;
   const cleaned = val.replace(/[\s\-\+]/g, '');
-  // Cameroon numbers: 9 digits (starting with 6 or 2) or with 237 prefix (11 digits total)
-  if (cleaned.startsWith('237') && cleaned.length === 11) {
-    return /^\d{11}$/.test(cleaned);
+  // Cameroon numbers: 9 digits (starting with 6 or 2) or with 237 prefix (12 digits total)
+  if (cleaned.startsWith('237') && cleaned.length === 12) {
+    return /^\d{12}$/.test(cleaned);
   }
   return /^\d{9}$/.test(cleaned);
 }
@@ -82,7 +82,7 @@ export function getValidationErrorMessage(
     case 'name':
       return 'Name must contain letters only (minimum 2 characters)';
     case 'phone':
-      return 'Enter a valid 9-digit phone number (e.g. 6xxxxxxxx)';
+      return 'Enter a valid Cameroon phone number: 9 digits (e.g. 6XXXXXXXX) or +237 followed by 9 digits';
     case 'cni':
       return docType === 'receipt'
         ? 'CNI receipt number must be digits only (10-20 digits)'

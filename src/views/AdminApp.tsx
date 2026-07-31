@@ -14143,7 +14143,7 @@ function getAdminAudioContext(): AudioContext | null {
                           label={strings.x_phone_number_login_identity || "Phone Number (Login identity)"}
                           type="tel"
                           required
-                          placeholder={strings.x_237xxxxxxxx || "+237xxxxxxxx"}
+                          placeholder={strings.x_237xxxxxxxx || "+237 6XXXXXXXX"}
                           value={staffPhone}
                           validationType="phone"
                           onChange={(e) => setStaffPhone(e.target.value)}
@@ -15181,7 +15181,7 @@ function getAdminAudioContext(): AudioContext | null {
                       </div>
 
                       <p className="text-[10px] text-brand-primary/60 leading-relaxed">
-                        Verify your Nexah API integration or backup providers here. Enter a Cameroon mobile number (e.g. <code className="font-mono bg-white border border-brand-secondary/10 px-1 py-0.5 rounded text-brand-primary">694003333</code> or <code className="font-mono bg-white border border-brand-secondary/10 px-1 py-0.5 rounded text-brand-primary">2376xxxxxxxx</code>) to test message dispatch in real-time.
+                        Verify your Nexah API integration or backup providers here. Enter a Cameroon mobile number (e.g. <code className="font-mono bg-white border border-brand-secondary/10 px-1 py-0.5 rounded text-brand-primary">694003333</code> or <code className="font-mono bg-white border border-brand-secondary/10 px-1 py-0.5 rounded text-brand-primary">+237 6XXXXXXXX</code>) to test message dispatch in real-time.
                       </p>
 
                       <form onSubmit={handleSendTestSms} className="space-y-3">
@@ -19151,7 +19151,7 @@ function getAdminAudioContext(): AudioContext | null {
                     label={strings.ag_phone_login || "Phone Number (Login sequence)"}
                     type="tel"
                     required
-                    placeholder={strings.ag_phone_placeholder || "+2376xxxxxxxx"}
+                    placeholder={strings.ag_phone_placeholder || "+237 6XXXXXXXX"}
                     value={agentPhone}
                     validationType="phone"
                     onChange={(e) => setAgentPhone(e.target.value)}
@@ -20200,7 +20200,7 @@ function getAdminAudioContext(): AudioContext | null {
                     label={strings.x_phone_number_login_identity || "Phone Number (Login identity)"}
                     type="tel"
                     required
-                    placeholder={strings.x_237xxxxxxxx || "+237xxxxxxxx"}
+                    placeholder={strings.x_237xxxxxxxx || "+237 6XXXXXXXX"}
                     value={adminPhone}
                     validationType="phone"
                     onChange={(e) => setAdminPhone(e.target.value)}
