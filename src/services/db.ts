@@ -2284,6 +2284,29 @@ class MockDatabase {
     }
   }
 
+  public getGrantedPermissionsForProfile(profile: Profile): string[] {
+    let keys: string[] = [];
+    if (profile.custom_role_id) {
+      const customRoleObj = this.getCustomRoleById(profile.custom_role_id);
+      keys = customRoleObj?.permission_keys || [];
+    } else if (profile.staff_title === "accountant") {
+      keys = ["view_ledger", "view_company_margin"];
+    } else if (profile.staff_title === "cashier") {
+      keys = ["manage_members", "approve_withdrawal"];
+    } else if (profile.staff_title === "principal") {
+      keys = ["manage_members", "manage_agents", "approve_withdrawal", "view_ledger", "manage_staff", "view_company_margin"];
+    } else if (profile.staff_title === "secretary") {
+      keys = ["manage_members"];
+    } else {
+      keys = profile.permissions || [];
+    }
+
+    if (profile.revoked_permission_keys && profile.revoked_permission_keys.length > 0) {
+      keys = keys.filter(k => !profile.revoked_permission_keys!.includes(k));
+    }
+    return keys;
+  }
+
   public getAuditTrail(
     Actor: Profile,
     customBranchFilter?: BranchID,
@@ -2296,9 +2319,25 @@ class MockDatabase {
     if (Actor.role === "branch_admin") {
       return this.auditLogs.filter((a) => a.branch_id === Actor.branch_id);
     }
-    throw new Error(
-      "Access Denied: Read permission required on internal auditlegend system.",
+
+    const permissions = this.getGrantedPermissionsForProfile(Actor);
+    const hasAuditPerm = permissions.some((p) =>
+      ["view_ledger", "audit.view_all_roles"].includes(p)
     );
+
+    if (hasAuditPerm) {
+      const canViewAllBranches = permissions.some((p) =>
+        ["transactions.view_all_branches", "audit.view_all_roles"].includes(p)
+      );
+      if (canViewAllBranches) {
+        return customBranchFilter
+          ? this.auditLogs.filter((a) => a.branch_id === customBranchFilter)
+          : this.auditLogs;
+      }
+      return this.auditLogs.filter((a) => a.branch_id === Actor.branch_id);
+    }
+
+    return [];
   }
 
   // --- SYSTEM MUTATORS AND SIMULATION CHECKS ---

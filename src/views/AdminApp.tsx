@@ -2907,8 +2907,13 @@ function getAdminAudioContext(): AudioContext | null {
       setAllLoans(lns);
 
       // Audit registries
-      const logs = dbService.getAuditTrail(user, bFilter);
-      setAuditLogs(logs);
+      try {
+        const logs = dbService.getAuditTrail(user, bFilter);
+        setAuditLogs(logs);
+      } catch (auditErr) {
+        console.warn("Audit trail loading deferred or restricted:", auditErr);
+        setAuditLogs([]);
+      }
 
       // Grants lists
       if (user.role === "pdg") {
