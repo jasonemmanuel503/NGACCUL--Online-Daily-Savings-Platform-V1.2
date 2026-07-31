@@ -307,7 +307,7 @@ export interface OfflineQueueItem {
   id: string; // UUID generated offline
   branch_id: BranchID;
   actor_id: string;
-  action_type: 'deposit' | 'register_client' | 'loan_repayment';
+  action_type: 'deposit' | 'register_client' | 'loan_repayment' | 'commission_ledger';
   payload: any;
   created_offline_at: string;
   synced_at?: string;

@@ -460,6 +460,7 @@ class MockDatabase {
   private auditLogs: AuditLog[] = [];
   private grants: CrossBranchGrant[] = [];
   public syncQueue: OfflineQueueItem[] = [];
+  public pendingCommissionSyncFailures: Array<{ entry: CommissionLedgerEntry; error: string; timestamp: string }> = [];
 
   // Concurrency & Idempotency Guards
   public isMutating: boolean = false;
@@ -542,6 +543,12 @@ class MockDatabase {
       if (storedAudit) this.auditLogs = JSON.parse(storedAudit);
       if (storedGrants) this.grants = JSON.parse(storedGrants);
       if (storedQueue) this.syncQueue = JSON.parse(storedQueue);
+      const storedCommFailures = localStorage.getItem("ng_commission_sync_failures");
+      if (storedCommFailures) {
+        try {
+          this.pendingCommissionSyncFailures = JSON.parse(storedCommFailures);
+        } catch {}
+      }
       const storedLeaves = localStorage.getItem("ng_leaves");
       if (storedLeaves) this.leaves = JSON.parse(storedLeaves);
 
@@ -895,6 +902,7 @@ class MockDatabase {
       localStorage.setItem("ng_audit", JSON.stringify(auditToSave));
       localStorage.setItem("ng_grants", JSON.stringify(this.grants));
       localStorage.setItem("ng_queue", JSON.stringify(this.syncQueue));
+      localStorage.setItem("ng_commission_sync_failures", JSON.stringify(this.pendingCommissionSyncFailures));
       localStorage.setItem("ng_leaves", JSON.stringify(this.leaves));
       localStorage.setItem("ng_custom_roles", JSON.stringify(this.customRoles));
       localStorage.setItem("ng_custom_permissions", JSON.stringify(this.customPermissions));
@@ -972,6 +980,29 @@ class MockDatabase {
       const dbBusinessHours = await SupabaseService.fetchBusinessHours();
       const dbSelfDepositLockSettings = await SupabaseService.fetchSelfDepositLockSettings();
       const dbSubdivisionAccessSettings = await SupabaseService.fetchSubdivisionAccessSettings();
+
+      // Auto-retry queued commission ledger items if any exist
+      const queuedCommissions = this.syncQueue.filter(
+        (q) => q.action_type === "commission_ledger" && (q.status === "queued" || q.status === "failed"),
+      );
+      for (const qItem of queuedCommissions) {
+        try {
+          const synced = await SupabaseService.saveCommissionLedgerEntry(qItem.payload);
+          if (synced) {
+            qItem.status = "synced";
+            qItem.synced_at = new Date().toISOString();
+            if (qItem.error_message) delete qItem.error_message;
+            this.pendingCommissionSyncFailures = this.pendingCommissionSyncFailures.filter(
+              (f) => f.entry.id !== qItem.payload.id,
+            );
+            try {
+              localStorage.setItem("ng_commission_sync_failures", JSON.stringify(this.pendingCommissionSyncFailures));
+            } catch {}
+          }
+        } catch (syncErr) {
+          console.error("Background sync retry for commission_ledger item failed:", qItem.id, syncErr);
+        }
+      }
 
       let updated = false;
       if (dbCustomRoles !== null) {
@@ -6799,9 +6830,7 @@ class MockDatabase {
     this.syncEntity("badge_award", newAward).catch((err) =>
       console.error("Sync award failed", err),
     );
-    this.syncEntity("commission_ledger", newLedgerEntry).catch((err) =>
-      console.error("Sync ledger failed", err),
-    );
+    this.syncCommissionLedgerWithRetry(newLedgerEntry);
   }
 
   public async evaluateAgentBadgesForMonth(
@@ -6958,9 +6987,7 @@ class MockDatabase {
       this.syncEntity("badge_award", newAward).catch((err) =>
         console.error("Sync award failed", err),
       );
-      this.syncEntity("commission_ledger", newLedgerEntry).catch((err) =>
-        console.error("Sync ledger failed", err),
-      );
+      this.syncCommissionLedgerWithRetry(newLedgerEntry);
 
       results.push({
         agentName: agent.full_name || agent.phone,
@@ -7568,6 +7595,20 @@ class MockDatabase {
             item.payload.ref,
             Actor.id,
           );
+        } else if (item.action_type === "commission_ledger") {
+          const success = await SupabaseService.saveCommissionLedgerEntry(item.payload);
+          if (success) {
+            item.status = "synced";
+            item.synced_at = new Date().toISOString();
+            if (item.error_message) delete item.error_message;
+            this.pendingCommissionSyncFailures = this.pendingCommissionSyncFailures.filter(
+              (f) => f.entry.id !== item.payload.id,
+            );
+            successCount++;
+            continue;
+          } else {
+            throw new Error("Commission ledger save returned false");
+          }
         }
         item.status = "synced";
         item.synced_at = new Date().toISOString();
@@ -8180,6 +8221,54 @@ class MockDatabase {
     }
   }
 
+  public async syncCommissionLedgerWithRetry(entry: CommissionLedgerEntry): Promise<boolean> {
+    const MAX_RETRIES = 3;
+    let success = false;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        success = await this.syncEntity("commission_ledger", entry);
+        if (success) {
+          return true;
+        }
+      } catch (err) {
+        console.warn(`[Commission Ledger Sync Attempt ${attempt}/${MAX_RETRIES} Failed]`, entry.id, err);
+      }
+      if (attempt < MAX_RETRIES) {
+        await new Promise((resolve) => setTimeout(resolve, 400 * attempt));
+      }
+    }
+
+    // Retries exhausted, enroll into offline syncQueue and track in pendingCommissionSyncFailures audit trail
+    console.error(`[CRITICAL] Commission ledger sync failed after ${MAX_RETRIES} retries for entry ID: ${entry.id}. Enrolling into offline sync queue.`);
+
+    const offlineItem: OfflineQueueItem = {
+      id: generateUUID(),
+      branch_id: entry.branch_id,
+      actor_id: entry.agent_id,
+      action_type: "commission_ledger",
+      payload: entry,
+      created_offline_at: new Date().toISOString(),
+      status: "queued",
+      error_message: `Commission sync retry exhausted for entry ${entry.id}`,
+    };
+
+    this.syncQueue.push(offlineItem);
+    this.recordCommissionSyncFailure(entry, `Sync failed after ${MAX_RETRIES} retries`);
+    this.saveToStorage();
+    return false;
+  }
+
+  private recordCommissionSyncFailure(entry: CommissionLedgerEntry, errorMsg: string) {
+    this.pendingCommissionSyncFailures.push({
+      entry,
+      error: errorMsg,
+      timestamp: new Date().toISOString(),
+    });
+    try {
+      localStorage.setItem("ng_commission_sync_failures", JSON.stringify(this.pendingCommissionSyncFailures));
+    } catch {}
+  }
+
   private async reverseTxFromBalance(tx: Transaction, amount: number): Promise<void> {
     let bal = this.balances.find((b) => b.client_id === tx.client_id);
     if (!bal) return; // nothing to reverse if no balance record exists
@@ -8326,9 +8415,7 @@ class MockDatabase {
         // Push entry to ledger
         this.ledger.push(withdrawalLedgerEntry);
 
-        this.syncEntity("commission_ledger", withdrawalLedgerEntry).catch((err) =>
-          console.error("Sync withdrawal commission ledger failed", err),
-        );
+        this.syncCommissionLedgerWithRetry(withdrawalLedgerEntry);
 
         // Notify agent immediately
         this.notifications.unshift({
@@ -8409,9 +8496,7 @@ class MockDatabase {
 
     this.ledger.push(newLedgerEntry);
 
-    this.syncEntity("commission_ledger", newLedgerEntry).catch((err) =>
-      console.error("Sync recruitment commission ledger failed", err),
-    );
+    this.syncCommissionLedgerWithRetry(newLedgerEntry);
 
     this.notifications.unshift({
       id: generateUUID(),
