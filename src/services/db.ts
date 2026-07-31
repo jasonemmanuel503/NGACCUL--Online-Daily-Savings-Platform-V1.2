@@ -147,6 +147,20 @@ export function generateUUID(): string {
   return crypto.randomUUID();
 }
 
+export function generateDeterministicUUID(seed: string): string {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  let hex = "";
+  for (let i = 0; i < 32; i++) {
+    const val = Math.abs(Math.sin(hash + i) * 10000) % 16;
+    hex += Math.floor(val).toString(16);
+  }
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
+
 // Helper to normalize phone number exactly like server-side format
 export function formatCameroonPhone(phone: string): string {
   let formatted = phone.replace(/\s+/g, "").replace(/\+/g, "");
@@ -7854,16 +7868,27 @@ class MockDatabase {
       const branchName = STATIC_BRANCHES?.find?.((b: any) => b.id === branchId)?.name || branchId;
 
       for (const pdg of pdgs) {
-        this.notifications.unshift({
-          id: generateUUID(),
-          branch_id: branchId,
-          recipient_id: pdg.id,
-          type: "pdg_branch_activity_digest",
-          title: `Branch Activity: ${branchName}`,
-          body: `${newClientsToday} new client(s) registered, ${activationsToday} activation(s), and ${totalDepositAmount.toLocaleString()} FCFA in confirmed deposits today.`,
-          is_read: false,
-          created_at: new Date().toISOString(),
-        });
+        const digestId = generateDeterministicUUID(`pdg_digest_${branchId}_${pdg.id}_${todayKey}`);
+        const existsInLocal = this.notifications.some(
+          (n) =>
+            n.id === digestId ||
+            (n.type === "pdg_branch_activity_digest" &&
+              n.branch_id === branchId &&
+              n.recipient_id === pdg.id &&
+              n.created_at.slice(0, 10) === todayKey),
+        );
+        if (!existsInLocal) {
+          this.notifications.unshift({
+            id: digestId,
+            branch_id: branchId,
+            recipient_id: pdg.id,
+            type: "pdg_branch_activity_digest",
+            title: `Branch Activity: ${branchName}`,
+            body: `${newClientsToday} new client(s) registered, ${activationsToday} activation(s), and ${totalDepositAmount.toLocaleString()} FCFA in confirmed deposits today.`,
+            is_read: false,
+            created_at: new Date().toISOString(),
+          });
+        }
       }
       sentAny = true;
     }

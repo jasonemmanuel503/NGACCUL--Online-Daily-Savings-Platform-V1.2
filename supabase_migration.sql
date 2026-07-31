@@ -769,3 +769,8 @@ ALTER TABLE commission_ledger DROP CONSTRAINT IF EXISTS commission_ledger_type_c
 ALTER TABLE commission_ledger ADD CONSTRAINT commission_ledger_type_check
   CHECK (type IN ('recruitment', 'deposit_pct', 'withdrawal_pct', 'badge_bonus'));
 
+-- Migration: add unique index to prevent duplicate daily PDG activity digests per branch per recipient per day
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_pdg_digest_per_branch_per_day
+ON notifications (branch_id, recipient_id, (created_at::date))
+WHERE type = 'pdg_branch_activity_digest';
+

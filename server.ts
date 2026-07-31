@@ -1310,6 +1310,8 @@ async function start() {
       while (attempt < MAX_RETRIES) {
         const { data, error } = table === "business_hours_settings"
           ? await serverSupabase.from(table).upsert(records, { onConflict: "scope" }).select()
+          : table === "notifications"
+          ? await serverSupabase.from(table).upsert(records, { ignoreDuplicates: true }).select()
           : await serverSupabase.from(table).upsert(records).select();
 
         if (!error) {
