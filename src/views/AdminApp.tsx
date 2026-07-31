@@ -2415,6 +2415,27 @@ export const AdminApp: React.FC<AdminAppProps> = ({
   const [modalSelectedPermissions, setModalSelectedPermissions] = useState<string[]>([]);
   const [modalNewFunctionLabel, setModalNewFunctionLabel] = useState("");
 
+  const resetStaffFormState = () => {
+    setStaffFullName("");
+    setStaffPhone("");
+    setStaffEmail("");
+    setStaffTitle("secretary");
+    setSelectedCustomRoleId("");
+    setStaffPermissions(["manage_members"]);
+    setStaffPhotoUrl("");
+    setUseCustomRoleMode(false);
+    setModalCustomRoleSelect("new");
+    setModalNewRoleName("");
+    setModalSelectedPermissions([]);
+    setModalNewFunctionLabel("");
+  };
+
+  useEffect(() => {
+    if (rolesSubTab === 'onboard') {
+      resetStaffFormState();
+    }
+  }, [rolesSubTab]);
+
   // Broadcast Center State Definitions
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastBody, setBroadcastBody] = useState("");
@@ -14135,22 +14156,43 @@ function getAdminAudioContext(): AudioContext | null {
                           validationType="email"
                           onChange={(e) => setStaffEmail(e.target.value)}
                         />
+                      </div>
 
-                        {/* Staff Role/Department Selection */}
+                      {/* Optional Custom Role Toggle */}
+                      <div className="flex items-center gap-2.5 p-2 bg-brand-surface/10 rounded-xl border border-brand-secondary/15">
+                        <input
+                          id="toggle-custom-role-onboard"
+                          type="checkbox"
+                          checked={useCustomRoleMode}
+                          onChange={(e) => {
+                            setUseCustomRoleMode(e.target.checked);
+                            if (e.target.checked) {
+                              setModalCustomRoleSelect("new");
+                              setModalSelectedPermissions([]);
+                              setModalNewRoleName("");
+                            }
+                          }}
+                          className="rounded text-[#4B2D7F] focus:ring-[#4B2D7F] h-4 w-4 cursor-pointer"
+                        />
+                        <label htmlFor="toggle-custom-role-onboard" className="text-[10px] font-bold uppercase tracking-wider text-brand-primary cursor-pointer">
+                          {strings.stf_toggle_custom_role || "Use Custom Role (RBAC)"}
+                        </label>
+                      </div>
+
+                      {!useCustomRoleMode ? (
                         <div className="space-y-1.5">
                           <label className="text-xs font-bold text-brand-primary/70">
                             Initial Department / Role Preset
                           </label>
                           <select
                             id="onboard-staff-role-select"
-                            value={useCustomRoleMode ? `custom_${selectedCustomRoleId}` : staffTitle}
+                            value={selectedCustomRoleId ? `custom_${selectedCustomRoleId}` : staffTitle}
                             onChange={(e) => {
                               const val = e.target.value;
                               if (val.startsWith("custom_")) {
                                 const roleId = val.substring(7);
                                 setSelectedCustomRoleId(roleId);
                                 setStaffTitle("custom");
-                                setUseCustomRoleMode(true);
                                 const roleObj = dbService.getCustomRoles().find((r) => r.id === roleId);
                                 if (roleObj) {
                                   setStaffPermissions(roleObj.permission_keys);
@@ -14158,7 +14200,6 @@ function getAdminAudioContext(): AudioContext | null {
                               } else {
                                 setSelectedCustomRoleId("");
                                 setStaffTitle(val);
-                                setUseCustomRoleMode(false);
                                 if (val === "secretary") setStaffPermissions(["manage_members"]);
                                 if (val === "finance") setStaffPermissions(["approve_withdrawal", "view_ledger"]);
                                 if (val === "accountant") setStaffPermissions(["view_ledger", "view_company_margin"]);
@@ -14184,7 +14225,148 @@ function getAdminAudioContext(): AudioContext | null {
                             )}
                           </select>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {/* Pick Custom Role or Create New Dropdown */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-brand-primary/70">
+                              {strings.stf_pick_existing_role || "Pick an Existing Custom Role"}
+                            </label>
+                            <select
+                              value={modalCustomRoleSelect}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setModalCustomRoleSelect(val);
+                                if (val !== "new") {
+                                  const roleObj = dbService.getCustomRoles(user.branch_id).find(r => r.id === val);
+                                  if (roleObj) {
+                                    setModalSelectedPermissions(roleObj.permission_keys);
+                                  }
+                                } else {
+                                  setModalSelectedPermissions([]);
+                                  setModalNewRoleName("");
+                                }
+                              }}
+                              className="w-full text-xs p-2.5 rounded-xl border border-brand-secondary/30 text-brand-primary focus:outline-none focus:border-brand-accent bg-[#F9F6FE] font-bold"
+                            >
+                              <option value="new">-- CREATE NEW CUSTOM ROLE --</option>
+                              {dbService.getCustomRoles(user.branch_id).map((role) => (
+                                <option key={role.id} value={role.id}>
+                                  {role.role_name.toUpperCase()}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* New Custom Role Name Input */}
+                          {modalCustomRoleSelect === "new" && (
+                            <div className="space-y-1 animate-fade-in">
+                              <label className="text-[10px] font-bold uppercase tracking-wider text-brand-primary/70">
+                                {strings.stf_custom_role_name_label || "New Custom Role Name"}
+                              </label>
+                              <input
+                                type="text"
+                                required={useCustomRoleMode && modalCustomRoleSelect === "new"}
+                                placeholder={strings.stf_custom_role_name_placeholder || "e.g. Branch Supervisor"}
+                                value={modalNewRoleName}
+                                onChange={(e) => setModalNewRoleName(e.target.value)}
+                                className="w-full text-xs p-2.5 rounded-xl border border-brand-secondary/30 text-brand-primary focus:outline-none focus:border-brand-accent bg-[#F9F6FE]"
+                              />
+                            </div>
+                          )}
+
+                          {/* Dynamic Checklist of Custom Permissions */}
+                          <div className="space-y-2 bg-brand-surface/30 p-3.5 rounded-2xl border border-[#a384d6]/20">
+                            <div className="flex justify-between items-center">
+                              <label className="text-[10px] font-bold uppercase tracking-wider text-brand-primary block">
+                                {strings.stf_permissions_map_label || "Authority Permissions Map"}
+                              </label>
+                              {modalCustomRoleSelect !== "new" && (
+                                <span className="text-[8px] bg-brand-accent/15 text-brand-accent font-black uppercase px-2 py-0.5 rounded-md">
+                                  Inherited from Custom Role
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="space-y-2 mt-1 max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
+                              {dbService.getCustomPermissions(user.branch_id).map((perm) => {
+                                const isSelected = modalSelectedPermissions.includes(perm.permission_key);
+                                const isDisabled = modalCustomRoleSelect !== "new";
+                                return (
+                                  <label key={perm.id} className={`flex items-start gap-2.5 p-1.5 rounded-lg transition-all ${isDisabled ? "opacity-60 cursor-not-allowed" : "hover:bg-brand-secondary/5 cursor-pointer"}`}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      disabled={isDisabled}
+                                      onChange={() => {
+                                        if (isDisabled) return;
+                                        if (isSelected) {
+                                          setModalSelectedPermissions(modalSelectedPermissions.filter(k => k !== perm.permission_key));
+                                        } else {
+                                          setModalSelectedPermissions([...modalSelectedPermissions, perm.permission_key]);
+                                        }
+                                      }}
+                                      className="mt-0.5 rounded text-brand-accent focus:ring-brand-accent"
+                                    />
+                                    <div className="-space-y-0.5">
+                                      <span className="font-bold text-xs text-brand-primary">{perm.label}</span>
+                                      {perm.description && (
+                                        <p className="text-[9px] text-brand-primary/50">{perm.description}</p>
+                                      )}
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
+
+                            {/* Inline Mini-Form for Adding Dynamic Functions */}
+                            {modalCustomRoleSelect === "new" && (
+                              <div className="pt-2.5 border-t border-brand-secondary/10 mt-2 space-y-1.5 animate-fade-in">
+                                <label className="text-[9px] font-black uppercase tracking-wider text-brand-primary/60 block">
+                                  {strings.stf_add_new_function_title || "Add a New Function / Permission key"}
+                                </label>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder={strings.stf_function_label_placeholder || "e.g. manage_client_rates"}
+                                    value={modalNewFunctionLabel}
+                                    onChange={(e) => setModalNewFunctionLabel(e.target.value)}
+                                    className="flex-1 text-[11px] px-2.5 py-1.5 rounded-xl border border-brand-secondary/20 bg-white text-brand-primary focus:outline-none focus:border-brand-accent"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      if (!modalNewFunctionLabel.trim()) return;
+                                      const key = modalNewFunctionLabel.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+                                      if (!key) return;
+                                      const existing = dbService.getCustomPermissions(user.branch_id);
+                                      if (existing.some(p => p.permission_key === key)) {
+                                        showBanner("This function/permission key already exists.", "error");
+                                        return;
+                                      }
+                                      const newPermObj: CustomPermission = {
+                                        id: generateUUID(),
+                                        permission_key: key,
+                                        label: modalNewFunctionLabel.trim(),
+                                        description: `Custom functional privilege: ${modalNewFunctionLabel.trim()}`,
+                                        branch_id: user.branch_id,
+                                        created_at: new Date().toISOString()
+                                      };
+                                      await dbService.saveCustomPermission(newPermObj);
+                                      setModalSelectedPermissions(prev => [...prev, key]);
+                                      setModalNewFunctionLabel("");
+                                      showBanner(`Function "${newPermObj.label}" successfully created and auto-selected.`, "success");
+                                    }}
+                                    className="px-3 py-1.5 bg-[#4B2D7F] text-white font-extrabold text-[9px] uppercase tracking-wider rounded-xl hover:bg-brand-accent transition-all cursor-pointer"
+                                  >
+                                    {strings.stf_add_new_function_btn || "Add Function"}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Staff Profile Photo Uploader */}
                       <div className="bg-brand-surface/10 p-4 rounded-2xl border border-brand-secondary/15 space-y-3">
@@ -18280,7 +18462,10 @@ function getAdminAudioContext(): AudioContext | null {
               </h3>
               <button
                 type="button"
-                onClick={() => setShowAddStaffModal(false)}
+                onClick={() => {
+                  setShowAddStaffModal(false);
+                  resetStaffFormState();
+                }}
                 className="p-1.5 hover:bg-brand-secondary/20 rounded-xl font-bold cursor-pointer transition-all text-xs"
               >
                 ✕
