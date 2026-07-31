@@ -121,7 +121,7 @@ CREATE TABLE commission_ledger (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   branch_id TEXT NOT NULL REFERENCES branches(id) ON DELETE RESTRICT,
   agent_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('recruitment', 'deposit_pct')),
+  type TEXT NOT NULL CHECK (type IN ('recruitment', 'deposit_pct', 'withdrawal_pct', 'badge_bonus')),
   reference_id UUID NOT NULL, -- profile_id (who joined) or transaction_id (the deposit)
   amount_fcfa NUMERIC(14,2) NOT NULL CHECK (amount_fcfa >= 0),
   accrued_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -763,4 +763,9 @@ ALTER TABLE transactions ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ DEFAUL
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS archived_by UUID REFERENCES profiles(id) ON DELETE SET NULL;
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS archive_batch_id TEXT DEFAULT NULL;
 CREATE INDEX IF NOT EXISTS idx_transactions_archive_batch_id ON transactions (archive_batch_id) WHERE archive_batch_id IS NOT NULL;
+
+-- Migration: update commission_ledger type check constraint
+ALTER TABLE commission_ledger DROP CONSTRAINT IF EXISTS commission_ledger_type_check;
+ALTER TABLE commission_ledger ADD CONSTRAINT commission_ledger_type_check
+  CHECK (type IN ('recruitment', 'deposit_pct', 'withdrawal_pct', 'badge_bonus'));
 
