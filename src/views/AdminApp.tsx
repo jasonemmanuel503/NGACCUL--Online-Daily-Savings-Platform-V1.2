@@ -16231,8 +16231,8 @@ function getAdminAudioContext(): AudioContext | null {
                       </div>
 
                       <div
+                        className="flex items-center gap-1"
                         onMouseDown={(e) => {
-                          e.preventDefault();
                           const sel = window.getSelection();
                           if (sel && sel.rangeCount > 0) {
                             const range = sel.getRangeAt(0);
@@ -16249,6 +16249,38 @@ function getAdminAudioContext(): AudioContext | null {
                           placeholder={strings.lte_size_placeholder || "Size"}
                           label={strings.lte_font_size_label || "Select Selection Font Size"}
                           className="!py-1 !px-2 !bg-[#1c0f38] hover:!bg-[#a384d6]/25 !rounded-md !text-white !border-white/5 !h-auto sm:!w-20 !w-16 !p-1.5 flex justify-between items-center"
+                        />
+                        <input
+                          type="number"
+                          min={1}
+                          step={1}
+                          inputMode="numeric"
+                          placeholder="px"
+                          value={selectedFontSize}
+                          title="Custom Font Size (px)"
+                          className="w-14 text-xs p-1.5 rounded-lg border border-brand-secondary/30 bg-[#1c0f38] text-white text-center focus:outline-none focus:border-[#a384d6]"
+                          onMouseDown={(e) => {
+                            const sel = window.getSelection();
+                            if (sel && sel.rangeCount > 0) {
+                              const range = sel.getRangeAt(0);
+                              if (editorRef.current && editorRef.current.contains(range.commonAncestorContainer)) {
+                                setSavedRange(range);
+                              }
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            // block decimal point, minus, and 'e' scientific notation
+                            if (['.', '-', 'e', 'E', '+'].includes(e.key)) e.preventDefault();
+                          }}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/[^\d]/g, ""); // digits only — whole numbers
+                            if (raw === "") {
+                              setSelectedFontSize("");
+                              return;
+                            }
+                            const n = parseInt(raw, 10);
+                            if (n > 0) handleFontSizeChange(String(n));
+                          }}
                         />
                       </div>
 
