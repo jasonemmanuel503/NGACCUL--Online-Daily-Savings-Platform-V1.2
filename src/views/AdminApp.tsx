@@ -11825,7 +11825,7 @@ function getAdminAudioContext(): AudioContext | null {
                                       const client = allProfiles.find((p) => p.id === d.client_id);
                                       const agentOrAdmin = allProfiles.find((p) => p.id === d.agent_id || p.id === d.created_by);
                                       return (
-                                        <tr key={d.id} className={`hover:bg-brand-surface/10 ${d.is_archived ? "bg-slate-50/60" : ""}`}>
+                                        <tr key={d.id} className={d.is_archived ? "bg-slate-50/60" : ""}>
                                           <td className="p-3 font-mono font-bold text-brand-primary/50 text-[10px] select-all">
                                             #{d.id.slice(0, 8).toUpperCase()}
                                           </td>
@@ -11931,7 +11931,7 @@ function getAdminAudioContext(): AudioContext | null {
                             const fee = w.withdrawal_fee ?? Math.round(w.amount * 0.03);
                             const net = w.net_payout ?? (w.amount - fee);
                             return (
-                              <tr key={w.id} className="hover:bg-brand-surface/10">
+                              <tr key={w.id}>
                                 <td className="p-3 font-mono font-bold text-brand-primary/50 text-[10px] select-all">
                                   #{w.id.slice(0, 8).toUpperCase()}
                                 </td>
@@ -12011,7 +12011,7 @@ function getAdminAudioContext(): AudioContext | null {
                           {sortedClis.map((cl) => {
                             const agent = allProfiles.find(p => p.id === cl.recruited_by);
                             return (
-                              <tr key={cl.id} className="hover:bg-brand-surface/10">
+                              <tr key={cl.id}>
                                 <td className="p-3 font-bold text-brand-primary">
                                   {cl.full_name}
                                 </td>
@@ -12092,7 +12092,7 @@ function getAdminAudioContext(): AudioContext | null {
                           </thead>
                           <tbody className="divide-y divide-brand-surface text-xs">
                             {cashRemittancesGrouped.map((item) => (
-                              <tr key={item.agentId} className="hover:bg-brand-surface/10">
+                              <tr key={item.agentId}>
                                 <td className="p-3 font-bold text-brand-primary">
                                   {item.agentName}
                                 </td>
@@ -12255,7 +12255,7 @@ function getAdminAudioContext(): AudioContext | null {
                                                 };
 
                                                 return (
-                                                  <tr key={tx.id} className="hover:bg-brand-surface/10">
+                                                  <tr key={tx.id}>
                                                     <td className="p-3 font-bold text-brand-primary">{clientName}</td>
                                                     <td className="p-3 font-mono text-[11px] text-brand-primary/70">{clientAccount}</td>
                                                     {user.role === "pdg" && (
@@ -12413,7 +12413,7 @@ function getAdminAudioContext(): AudioContext | null {
                               {searchedTxns.map((t) => {
                                 const client = allProfiles.find((p) => p.id === t.client_id);
                                 return (
-                                  <tr key={t.id} className="hover:bg-brand-surface/10">
+                                  <tr key={t.id} className={t.is_archived ? "bg-slate-50/60" : ""}>
                                     <td className="p-3 text-brand-primary/80 font-medium text-[11px]">
                                       {new Date(t.created_at).toLocaleString()}
                                     </td>
