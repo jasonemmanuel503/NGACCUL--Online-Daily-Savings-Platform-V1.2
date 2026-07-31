@@ -1,0 +1,833 @@
+@import "tailwindcss";
+
+:root {
+  --brand-primary: #4b2d7f;
+  --brand-secondary: #c8b8e8;
+  --brand-surface: #f3eef9;
+  --brand-accent: #7c4dcc;
+  --bg-color: #f3eef9;
+  --card-bg: #ffffff;
+  --text-color: #4b2d7f;
+  --border-color: rgba(200, 184, 232, 0.35);
+
+  --success-indicator: #1a7a4a;
+  --warning-indicator: #c97a10;
+  --error-indicator: #b42318;
+
+  /* Custom extended tokens representing growth & high contrast depth */
+  --ink-deep: #150B2E;
+  --glow-gold: #E8B649;
+  --indent-2: 2rem;
+  --indent-4: 4rem;
+}
+
+.dark {
+  --brand-primary: #d4c9ec;
+  --brand-secondary: #3b2a5e;
+  --brand-surface: #150B2E;
+  --brand-accent: #a384d6;
+  --bg-color: #150B2E;
+  --card-bg: #1b112d;
+  --text-color: #d4c9ec;
+  --border-color: rgba(200, 184, 232, 0.15);
+
+  --success-indicator: #2ac075;
+  --warning-indicator: #eaa842;
+  --error-indicator: #f0574f;
+
+  /* Custom extended tokens representing growth & high contrast depth */
+  --ink-deep: #150B2E;
+  --glow-gold: #E8B649;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Brand Tones */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-accent: var(--brand-accent);
+  --color-ink-deep: var(--ink-deep);
+  --color-glow-gold: var(--glow-gold);
+
+  /* Indicators */
+  --color-success-indicator: var(--success-indicator);
+  --color-warning-indicator: var(--warning-indicator);
+  --color-error-indicator: var(--error-indicator);
+}
+
+/* Base style resets */
+html,
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+  transition:
+    background-color 0.2s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+}
+
+.font-numeric {
+  font-family: var(--font-mono);
+}
+
+/* Custom transitions and cards mapping for elements using explicit static colors */
+.bg-white {
+  background-color: var(--card-bg) !important;
+  transition: background-color 0.2s ease;
+}
+
+.bg-\[\#F3EEF9\] {
+  background-color: var(--bg-color) !important;
+  transition: background-color 0.2s ease;
+}
+
+.bg-\[\#F9F6FE\] {
+  background-color: var(--brand-surface) !important;
+  color: var(--brand-primary) !important;
+  transition: background-color 0.2s ease, color 0.15s ease;
+}
+
+.text-\[\#4B2D7F\] {
+  color: var(--text-color) !important;
+  transition: color 0.15s ease;
+}
+
+/* Dark-mode custom styles where needed */
+.dark .text-gray-900 {
+  color: #f3eef9 !important;
+}
+.dark .text-gray-700 {
+  color: #d4c9ec !important;
+}
+.dark .text-gray-600 {
+  color: #9c8cbf !important;
+}
+.dark .text-gray-500 {
+  color: #8c7ca8 !important;
+}
+.dark .bg-gray-50 {
+  background-color: #120921 !important;
+}
+.dark .bg-gray-100 {
+  background-color: #170c2b !important;
+}
+.dark .border-gray-100 {
+  border-color: rgba(200, 184, 232, 0.1) !important;
+}
+.dark .border-gray-200 {
+  border-color: rgba(200, 184, 232, 0.15) !important;
+}
+.dark .hover\:bg-gray-50:hover {
+  background-color: #1a0f33 !important;
+}
+
+/* Fix all buttons to ensure high-visibility CTA text and brand-consistent backgrounds across light & dark themes */
+button,
+html button,
+[role="button"] {
+  position: relative;
+  transition:
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.15s ease,
+    opacity 0.15s ease !important;
+}
+
+/* Explicit button theme class mapping to override accidental layout overlays and restore CTA text visibility */
+button.bg-brand-primary,
+[class*="bg-brand-primary"] {
+  background-color: var(--brand-primary) !important;
+  color: #ffffff !important;
+}
+
+.dark button.bg-brand-primary,
+.dark button.bg-brand-primary *,
+.dark [class*="bg-brand-primary"],
+.dark [class*="bg-brand-primary"] * {
+  color: #1b0d3a !important;
+  font-weight: 800 !important;
+}
+
+button.bg-brand-accent,
+[class*="bg-brand-accent"] {
+  background-color: var(--brand-accent) !important;
+  color: #ffffff !important;
+}
+
+.dark button.bg-brand-accent,
+.dark button.bg-brand-accent *,
+.dark [class*="bg-brand-accent"],
+.dark [class*="bg-brand-accent"] * {
+  color: #1b0d3a !important;
+  font-weight: 800 !important;
+}
+
+button.bg-\[\#1A7A4A\],
+[class*="bg-[#1A7A4A]"] {
+  background-color: #1a7a4a !important;
+  color: #ffffff !important;
+}
+
+button.bg-\[\#B42318\],
+[class*="bg-[#B42318]"] {
+  background-color: #b42318 !important;
+  color: #ffffff !important;
+}
+
+/* Smooth motion tap simulation for buttons with no custom animation */
+button:active,
+[role="button"]:active {
+  transform: scale(0.97) !important;
+}
+
+/* Fix header and sidebar text/icon legibility in dark mode when brand-primary is highly bright/light lilac */
+.dark header.bg-brand-primary,
+.dark aside.bg-brand-primary,
+.dark header.bg-brand-primary *,
+.dark aside.bg-brand-primary * {
+  color: #0e071a !important;
+}
+
+/* Allow specific high-visibility accents/indicators to bypass header dark override */
+.dark header.bg-brand-primary .text-emerald-400 {
+  color: #166534 !important;
+}
+.dark header.bg-brand-primary .text-brand-accent {
+  color: #7c4dcc !important;
+}
+.dark header.bg-brand-primary .bg-brand-accent {
+  background-color: #7c4dcc !important;
+  color: #ffffff !important;
+}
+.dark aside.bg-brand-primary .bg-brand-accent {
+  background-color: #7c4dcc !important;
+  color: #ffffff !important;
+}
+
+/* Fix bottom tab bar icon/text visibility in light mode so they organic contrast on public white screen */
+nav.fixed.bottom-0 button,
+nav.fixed.bottom-0 button * {
+  color: #1b0d3a !important;
+  opacity: 1 !important;
+}
+
+nav.fixed.bottom-0 button[class*="font-bold"],
+nav.fixed.bottom-0 button[class*="scale-110"],
+nav.fixed.bottom-0 button[class*="font-bold"] *,
+nav.fixed.bottom-0 button[class*="scale-110"] * {
+  color: #7d4dcc !important;
+  opacity: 1 !important;
+}
+
+/* Ensure deep dark-mode support for bottom tab bar buttons */
+.dark nav.fixed.bottom-0 button,
+.dark nav.fixed.bottom-0 button * {
+  color: #d4c9ec !important;
+  opacity: 0.7;
+}
+
+.dark nav.fixed.bottom-0 button[class*="font-bold"],
+.dark nav.fixed.bottom-0 button[class*="scale-110"],
+.dark nav.fixed.bottom-0 button[class*="font-bold"] *,
+.dark nav.fixed.bottom-0 button[class*="scale-110"] * {
+  color: #a384d6 !important;
+  opacity: 1 !important;
+}
+
+/* Make fixed bottom Lucide icons bold on light mode for contrast */
+html:not(.dark) nav.fixed.bottom-0 svg,
+body:not(.dark) nav.fixed.bottom-0 svg {
+  stroke-width: 2.75px !important;
+}
+
+/* Dropdown (select) and option legibility override to prevent invisible text inside overlays under dark mode */
+select,
+option,
+select option {
+  background-color: #ffffff !important;
+  color: #1b0d3a !important; /* Elegant dark violet */
+  font-weight: 600 !important;
+  text-align: center !important;
+  text-align-last: center !important;
+  direction: ltr !important;
+  padding-left: 1.75rem !important;
+  padding-right: 1.75rem !important;
+}
+
+.dark select,
+.dark option,
+.dark select option {
+  background-color: #24163d !important;
+  color: #e5def4 !important; /* High contrast pastel in dark mode */
+  font-weight: 600 !important;
+  text-align: center !important;
+  text-align-last: center !important;
+  direction: ltr !important;
+  border-color: rgba(200, 184, 232, 0.3) !important;
+  padding-left: 1.75rem !important;
+  padding-right: 1.75rem !important;
+}
+
+/* Date picker calendar picker indicator hidden but clickable for custom overlay */
+input[type="date"] {
+  text-align: left;
+  position: relative;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0 !important;
+  cursor: pointer;
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 30 !important;
+}
+
+.dark input[type="date"] {
+  color-scheme: dark !important;
+  color: #e5def4 !important;
+}
+
+/* Smooth and responsive select field hover & focus glow states */
+select:hover {
+  border-color: #7c4dcc !important;
+}
+select:focus {
+  border-color: #7c4dcc !important;
+  outline: 2px solid rgba(124, 77, 204, 0.25) !important;
+}
+
+/* ==========================================================================
+   PHASE 13 - Figma/Dribbble-Tier Liquid & Glassmorphism Aesthetics
+   ========================================================================== */
+
+/* 1. Liquid wave container & layers */
+.wave-container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  overflow: hidden;
+  transition: height 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: transparent;
+}
+
+.wave-layer {
+  position: absolute;
+  width: 250%;
+  height: 250%;
+  bottom: -60%;
+  left: -75%;
+  border-radius: 41%;
+}
+
+.wave-layer-bg {
+  /* Backwave - golden/lavender parallax highlight */
+  background: linear-gradient(135deg, rgba(124, 77, 204, 0.5) 0%, rgba(232, 182, 73, 0.3) 100%);
+  animation: rotate-wave-parallax 14s infinite linear;
+  opacity: 0.82;
+  z-index: 1;
+}
+
+.wave-layer-fg {
+  /* Forewave - deep solid branding color */
+  background: linear-gradient(135deg, rgba(75, 45, 127, 0.8) 0%, rgba(124, 77, 204, 0.65) 60%, rgba(232, 182, 73, 0.45) 100%);
+  animation: rotate-wave-main 9s infinite linear;
+  opacity: 0.95;
+  z-index: 2;
+}
+
+@keyframes rotate-wave-parallax {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes rotate-wave-main {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Ambient aurora background for the sign-in screen */
+.auth-aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.auth-aurora__blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.45;
+  will-change: transform;
+}
+
+.dark .auth-aurora__blob {
+  opacity: 0.3;
+}
+
+.auth-aurora__blob--one {
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  left: -100px;
+  background: var(--brand-accent);
+  animation: aurora-drift-one 22s ease-in-out infinite;
+}
+
+.auth-aurora__blob--two {
+  width: 380px;
+  height: 380px;
+  bottom: -140px;
+  right: -80px;
+  background: var(--brand-secondary);
+  animation: aurora-drift-two 26s ease-in-out infinite;
+}
+
+.auth-aurora__blob--three {
+  width: 320px;
+  height: 320px;
+  top: 40%;
+  left: 55%;
+  background: var(--brand-primary);
+  animation: aurora-drift-three 30s ease-in-out infinite;
+}
+
+@keyframes aurora-drift-one {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(60px, 40px) scale(1.1); }
+  66%      { transform: translate(-30px, 70px) scale(0.95); }
+}
+
+@keyframes aurora-drift-two {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(-50px, -60px) scale(1.08); }
+  66%      { transform: translate(30px, -20px) scale(0.92); }
+}
+
+@keyframes aurora-drift-three {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(-50%, -60%) scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-aurora__blob--one,
+  .auth-aurora__blob--two,
+  .auth-aurora__blob--three {
+    animation: none;
+  }
+}
+
+/* 2. Radial animated/static gradient mesh backgrounds */
+.hero-gradient-mesh {
+  background: radial-gradient(circle at 15% 25%, rgba(124, 77, 204, 0.38) 0%, rgba(75, 45, 127, 0.22) 50%, rgba(232, 182, 73, 0.08) 100%), var(--card-bg) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.dark .hero-gradient-mesh {
+  background: radial-gradient(circle at 15% 20%, rgba(163, 132, 214, 0.45) 0%, rgba(21, 11, 46, 0.85) 65%, rgba(232, 182, 73, 0.12) 100%), #150b2e !important;
+}
+
+/* Animated glowing gradient border for dashboard welcome header */
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.gradient-border-glow {
+  position: relative;
+}
+
+.gradient-border-glow::before {
+  content: "";
+  position: absolute;
+  inset: -2.5px;
+  border-radius: inherit;
+  padding: 2.5px; /* Enhanced glowing edge thickness */
+  background: conic-gradient(from var(--gradient-angle, 0deg), #a384d6, #e8b649, #7c4dcc, #a384d6);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rotate-gradient-border 8s linear infinite;
+  pointer-events: none;
+  opacity: 1.0; /* Full visibility */
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.gradient-border-glow:hover::before {
+  opacity: 1;
+}
+
+@keyframes rotate-gradient-border {
+  to {
+    --gradient-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient-border-glow::before {
+    animation: none;
+  }
+}
+
+/* Focus-only animated gradient ring for form inputs (login fields) */
+.gradient-border-glow-field {
+  position: relative;
+  border-radius: 0.75rem; /* matches rounded-xl on the inputs it wraps */
+}
+.gradient-border-glow-field::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(from var(--gradient-angle, 0deg), #a384d6, #e8b649, #7c4dcc, #a384d6);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rotate-gradient-border 8s linear infinite;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 1;
+}
+/* Only animate/show while a descendant input has focus */
+.gradient-border-glow-field:focus-within::before {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gradient-border-glow-field::before { animation: none; }
+}
+
+/* Always-on animated gradient ring for the active login-portal tab */
+@layer components {
+  .gradient-border-glow-tab-active {
+    position: relative;
+  }
+  .gradient-border-glow-tab-active::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    padding: 2px;
+    background: conic-gradient(from var(--gradient-angle, 0deg), #a384d6, #e8b649, #7c4dcc, #a384d6);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: rotate-gradient-border 8s linear infinite;
+    pointer-events: none;
+    opacity: 1;
+    z-index: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gradient-border-glow-tab-active::before { animation: none; }
+  }
+}
+
+@keyframes bell-ring {
+  0%, 82%, 100% { transform: rotate(0deg); }
+  84% { transform: rotate(12deg); }
+  86% { transform: rotate(-10deg); }
+  88% { transform: rotate(8deg); }
+  90% { transform: rotate(-6deg); }
+  92% { transform: rotate(4deg); }
+  94% { transform: rotate(-2deg); }
+  96%, 100% { transform: rotate(0deg); }
+}
+.animate-bell-ring {
+  animation: bell-ring 2.5s ease-in-out infinite;
+  transform-origin: 50% 0%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-bell-ring {
+    animation: none;
+  }
+}
+
+.gradient-border-glow-avatar {
+  position: relative;
+  border-radius: 9999px;
+  display: inline-block;
+}
+
+.gradient-border-glow-avatar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  padding: 1.5px;
+  background: conic-gradient(from var(--gradient-angle, 0deg), #a384d6, #e8b649, #7c4dcc, #a384d6);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rotate-gradient-border 8s linear infinite;
+  pointer-events: none;
+  opacity: 0.85;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient-border-glow-avatar::before {
+    animation: none;
+  }
+}
+
+/* Quieter family gradient mesh for desktop tools (Admin / Agent tabs) */
+.hero-gradient-mesh-quiet {
+  background: radial-gradient(circle at 10% 10%, rgba(124, 77, 204, 0.15) 0%, rgba(75, 45, 127, 0.05) 50%, rgba(232, 182, 73, 0.04) 100%), var(--card-bg) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.dark .hero-gradient-mesh-quiet {
+  background: radial-gradient(circle at 10% 10%, rgba(163, 132, 214, 0.18) 0%, rgba(21, 11, 46, 0.95) 65%, rgba(232, 182, 73, 0.05) 100%), #150b2e !important;
+}
+
+/* 3. Glassmorphism cards with 1px inner glow bounds */
+.glass-ui-card {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(200, 184, 232, 0.4) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 8px 32px rgba(75, 45, 127, 0.04) !important;
+}
+
+.dark .glass-ui-card {
+  background: rgba(27, 17, 45, 0.45) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(200, 184, 232, 0.16) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.06), 0 12px 36px rgba(10, 5, 20, 0.65) !important;
+}
+
+/* Custom fade-in and scale animation classes */
+.animate-fade-in {
+  animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-red {
+  animation: pulseRed 1.6s ease-in-out infinite;
+}
+
+@keyframes pulseRed {
+  0%, 100% {
+    color: inherit;
+    text-shadow: none;
+  }
+  50% {
+    color: #ef4444;
+    text-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Micro-interaction hover lifts */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+}
+.hover-lift:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 12px 28px rgba(75, 45, 127, 0.08) !important;
+}
+.dark .hover-lift:hover {
+  box-shadow: 0 12px 32px rgba(10, 5, 20, 0.5), 0 0 1px rgba(163, 132, 214, 0.15) !important;
+}
+
+/* Unique, ultra-premium light violet scrollbar layout with delicate shadows */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(200, 184, 232, 0.25) !important;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #C8B8E8 !important; /* Elegant Light Violet */
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 3px rgba(124, 77, 204, 0.25);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #B9A4E0 !important; /* Slightly darker violet hover */
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #C8B8E8 rgba(200, 184, 232, 0.08); /* Firefox custom color fallback */
+}
+
+/* Hide default vertical and horizontal scrollbars visually on tablets and mobile devices while keeping touch scroll active */
+@media (max-width: 1024px) {
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+}
+
+/* Ensure dark color scheme for native inputs in dark mode */
+.dark input[type="date"] {
+  color-scheme: dark !important;
+}/* Keyframe and animation styling for PIN errors shake feedback */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Custom formatting for PDG published loan terms rendering inside contenteditable and terms container */
+.prose-terms h1 {
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.75rem !important;
+  color: #ffffff !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(200, 184, 232, 0.15);
+  padding-bottom: 0.3rem;
+}
+.prose-terms h2 {
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+  color: #a384d6 !important;
+  text-transform: uppercase;
+}
+.prose-terms p {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.75rem !important;
+  line-height: var(--terms-line-height, 1.6) !important;
+  color: rgba(212, 201, 236, 0.95) !important;
+}
+.prose-terms b, .prose-terms strong {
+  font-weight: bold !important;
+  color: #ffffff !important;
+}
+.prose-terms i, .prose-terms em {
+  font-style: italic !important;
+}
+.prose-terms div {
+  line-height: var(--terms-line-height, 1.6) !important;
+}
+.prose-terms u {
+  text-decoration: underline !important;
+}
+.prose-terms ul {
+  list-style-type: disc !important;
+  margin-left: 1.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+.prose-terms ol {
+  list-style-type: decimal !important;
+  margin-left: 1.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+.prose-terms ol[type="a"] {
+  list-style-type: lower-alpha !important;
+}
+.prose-terms li {
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+  line-height: var(--terms-line-height, 1.6) !important;
+  color: rgba(212, 201, 236, 0.95) !important;
+}
+.prose-terms a {
+  color: #38bdf8 !important;
+  text-decoration: underline !important;
+  cursor: pointer;
+}
+.prose-terms a:hover {
+  color: #7dd3fc !important;
+}
+.prose-terms sup {
+  font-size: 75% !important;
+  line-height: 0 !important;
+  position: relative !important;
+  vertical-align: baseline !important;
+  top: -0.5em !important;
+}
+.prose-terms sub {
+  font-size: 75% !important;
+  line-height: 0 !important;
+  position: relative !important;
+  vertical-align: baseline !important;
+  bottom: -0.25em !important;
+}
+
+/* High visibility active language button styling to prevent dark-mode invisible-text bug */
+.active-lang-btn {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 900 !important;
+}
+
+/* Ensure sidebar tooltips always have white text in both light and dark modes, bypassing any general overrides */
+.sidebar-tooltip,
+.dark aside.bg-brand-primary .sidebar-tooltip {
+  color: #ffffff !important;
+  background-color: #150B2E !important;
+}
+
+/* Ensure the sidebar toggle collapse button and its children always have white text/icon color, bypassing dark overrides */
+.toggle-collapse-btn,
+.toggle-collapse-btn *,
+.dark aside.bg-brand-primary .toggle-collapse-btn,
+.dark aside.bg-brand-primary .toggle-collapse-btn * {
+  color: #ffffff !important;
+}
+

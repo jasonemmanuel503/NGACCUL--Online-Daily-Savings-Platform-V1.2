@@ -1,0 +1,19 @@
+{
+  "id": "ngaccul-platform",
+  "name": "NGACCUL Savings & Credit Platform",
+  "short_name": "NGACCUL",
+  "description": "Unified savings and credit cooperative for NGACCUL branch offices in Cameroon.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#120F1A",
+  "theme_color": "#4B2D7F",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/branding/logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

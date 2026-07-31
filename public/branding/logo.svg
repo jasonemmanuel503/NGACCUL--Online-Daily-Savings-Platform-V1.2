@@ -1,0 +1,61 @@
+<!-- WORKING ARTWORK: recreated from a client-supplied reference image for demo purposes. Replace with the client's final approved logo file before production launch. See BRANDING.md. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <!-- Definition for drop shadows if needed -->
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#4B2D7F" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Circular background: field in light violet/lavender tint (#F3EEF9) with a border of brand primary (#4B2D7F) -->
+  <circle cx="200" cy="180" r="140" fill="#F3EEF9" stroke="#4B2D7F" stroke-width="10" filter="url(#shadow)" />
+  
+  <!-- Outer Lavender accent ring (#C8B8E8) -->
+  <circle cx="200" cy="180" r="145" fill="none" stroke="#C8B8E8" stroke-width="2" />
+
+  <!-- The globe-grid sphere backtop -->
+  <g stroke="#C8B8E8" stroke-width="1.5" fill="none">
+    <!-- Globe outline -->
+    <circle cx="200" cy="165" r="75" stroke="#4B2D7F" stroke-width="3" fill="#ffffff" fill-opacity="0.75" />
+    <!-- Meridians / Latitudes -->
+    <path d="M125 165 h150" />
+    <path d="M200 90 v150" />
+    <path d="M135 130 q65 25 130 0" />
+    <path d="M135 200 q65 -25 130 0" />
+    <path d="M165 95 q35 70 0 140" />
+    <path d="M235 95 q-35 70 0 140" />
+  </g>
+
+  <!-- Family Silhouette standing in front of the globe (Two adults, two children) in deep violet (#4B2D7F) -->
+  <g fill="#4B2D7F">
+    <!-- Father (Adult Left) -->
+    <circle cx="180" cy="140" r="10" />
+    <path d="M168 152 h24 v45 h-6 v-20 h-4 v-10 h-4 v30 h-6 z" />
+    
+    <!-- Mother (Adult Right) -->
+    <circle cx="210" cy="142" r="9" />
+    <path d="M199 153 c0 0 5 -5 11 -5 s11 5 11 5 l-1 12 h-20 z" />
+    <path d="M202 165 h16 l3 28 h-5 v-15 h-4 v15 h-5 v-15 h-5 z" />
+
+    <!-- Son (Child left of Father) -->
+    <circle cx="160" cy="160" r="6" />
+    <path d="M153 168 h14 v22 h-3 v-10 h-8 v10 h-3 z" />
+
+    <!-- Daughter (Child right of Mother) -->
+    <circle cx="230" cy="162" r="5.5" />
+    <path d="M223 169 c0 0 3 -3 7 -3 s7 3 7 3 l-1 8 h-12 z" />
+    <path d="M225 177 h10 l1 13 h-12 z" />
+  </g>
+
+  <!-- Deep Violet cupped hands (#4B2D7F) rising from the bottom, supporting the globe -->
+  <g fill="#4B2D7F" filter="url(#shadow)">
+    <!-- Left Hand -->
+    <path d="M110 220 c15 35 45 55 90 60 c0 0 -15 -15 -18 -32 c-3 -15 -12 -28 -20 -38 c-10 -12 -12 -18 -12 -18 s-4 15 2 28 c3 6 3 10 -2 10 s-10 -15 -5 -32 c2 -8 5 -15 5 -15 s-10 12 -11 25 c-1 10 -6 12 -9 12 s-5-15 0-32 c1-8 3-17 3-17 s-12 18 -10 38 c1 10 -3 14 -7 14 s-4 -12 -2 -28 c1 -10 1 -18 1 -18 s-7 18 -3 38 c1 6 0 12 -4 12 s-5 -10 -5 -25 c0 -12 2 -27 2 -27 s-10 20 -5 45" />
+
+    <!-- Right Hand (Mirrored) -->
+    <path d="M290 220 c-15 35 -45 55 -90 60 c0 0 15 -15 18 -32 c3 -15 12 -28 20 -38 c10 -12 12 -18 12 -18 s4 15 -2 28 c-3 6 -3 10 2 10 s10 -15 5 -32 c-2 -8 -5 -15 -5 -15 s10 12 11 25 c1 10 6 12 9 12 s5-15 0-32 c-1-8 -3-17 -3-17 s12 18 10 38 c-1 10 3 14 7 14 s4 -12 2 -28 c-1 -10 -1 -18 -1 -18 s7 18 3 38 c-1 6 0 12 4 12 s5 -10 5 -25 c0 -12 -2 -27 -2 -27 s10 20 5 45" />
+  </g>
+
+  <!-- Wordmark "NGACCUL" below the hands in Sora / Inter bold equivalent styling (#4B2D7F) -->
+  <text x="200" y="365" font-family="'Sora', 'Inter', sans-serif" font-weight="900" font-size="44" fill="#4B2D7F" text-anchor="middle" letter-spacing="4">NGACCUL</text>
+</svg>
