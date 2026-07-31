@@ -15838,9 +15838,97 @@ function getAdminAudioContext(): AudioContext | null {
               };
 
               const handleHeadingCommand = (tag: string) => {
-                document.execCommand("formatBlock", false, tag);
-                const cleanTag = tag.replace(/[<>]/g, "");
+                const cleanTag = tag.replace(/[<>]/g, "").toLowerCase();
+                const selection = window.getSelection();
+                let range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : savedRange;
+
+                if (range && editorRef.current && editorRef.current.contains(range.commonAncestorContainer)) {
+                  if (selection) {
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                  }
+
+                  let containingBlock: HTMLElement | null = null;
+                  let curr: Node | null = range.commonAncestorContainer;
+                  while (curr && curr !== editorRef.current) {
+                    if (curr.nodeType === Node.ELEMENT_NODE && curr.parentNode === editorRef.current) {
+                      containingBlock = curr as HTMLElement;
+                      break;
+                    }
+                    curr = curr.parentNode;
+                  }
+
+                  if (!containingBlock && editorRef.current.firstElementChild) {
+                    containingBlock = editorRef.current.firstElementChild as HTMLElement;
+                  }
+
+                  if (containingBlock && !range.collapsed) {
+                    let hasBeforeContent = false;
+                    let hasAfterContent = false;
+                    let beforeFrag: DocumentFragment | null = null;
+                    let afterFrag: DocumentFragment | null = null;
+
+                    try {
+                      const beforeRange = document.createRange();
+                      beforeRange.setStartBefore(containingBlock.firstChild || containingBlock);
+                      beforeRange.setEnd(range.startContainer, range.startOffset);
+                      beforeFrag = beforeRange.cloneContents();
+                      hasBeforeContent = Array.from(beforeFrag.childNodes).some(
+                        (node) => (node.textContent && node.textContent.trim().length > 0) || node.nodeType === Node.ELEMENT_NODE
+                      );
+                    } catch (e) {
+                      // ignore
+                    }
+
+                    try {
+                      const afterRange = document.createRange();
+                      afterRange.setStart(range.endContainer, range.endOffset);
+                      afterRange.setEndAfter(containingBlock.lastChild || containingBlock);
+                      afterFrag = afterRange.cloneContents();
+                      hasAfterContent = Array.from(afterFrag.childNodes).some(
+                        (node) => (node.textContent && node.textContent.trim().length > 0) || node.nodeType === Node.ELEMENT_NODE
+                      );
+                    } catch (e) {
+                      // ignore
+                    }
+
+                    if (hasBeforeContent || hasAfterContent) {
+                      const headingFragment = range.extractContents();
+                      const headingNode = document.createElement(cleanTag);
+                      headingNode.appendChild(headingFragment);
+
+                      const parent = containingBlock.parentNode;
+                      if (parent) {
+                        if (hasBeforeContent && beforeFrag) {
+                          const beforeNode = containingBlock.cloneNode(false) as HTMLElement;
+                          beforeNode.appendChild(beforeFrag);
+                          parent.insertBefore(beforeNode, containingBlock);
+                        }
+
+                        parent.insertBefore(headingNode, containingBlock);
+
+                        if (hasAfterContent && afterFrag) {
+                          const afterNode = containingBlock.cloneNode(false) as HTMLElement;
+                          afterNode.appendChild(afterFrag);
+                          parent.insertBefore(afterNode, containingBlock);
+                        }
+
+                        parent.removeChild(containingBlock);
+                      }
+                    } else {
+                      document.execCommand("formatBlock", false, tag);
+                    }
+                  } else {
+                    document.execCommand("formatBlock", false, tag);
+                  }
+                } else {
+                  document.execCommand("formatBlock", false, tag);
+                }
+
                 mergeAdjacentHeadings(cleanTag);
+                if (editorRef.current) {
+                  editorRef.current.focus();
+                }
                 syncContent();
               };
 
