@@ -429,13 +429,32 @@ class MockDatabase {
     return this._notifications;
   }
   public set notifications(val: Notification[]) {
+    if (Array.isArray(val)) {
+      const seen = new Set<string>();
+      val = val.filter((item) => {
+        if (!item || !item.id) return false;
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      });
+    }
     this._notifications = val;
     if (val) {
       const originalUnshift = val.unshift;
       const dbInstance = this;
       val.unshift = function(...items: Notification[]) {
-        const result = originalUnshift.apply(this, items);
-        items.forEach(item => {
+        const uniqueItems: Notification[] = [];
+        for (const item of items) {
+          if (!item || !item.id) continue;
+          const existsInArray = val.some((existing) => existing.id === item.id);
+          const existsInNewList = uniqueItems.some((u) => u.id === item.id);
+          if (!existsInArray && !existsInNewList) {
+            uniqueItems.push(item);
+          }
+        }
+        if (uniqueItems.length === 0) return val.length;
+        const result = originalUnshift.apply(this, uniqueItems);
+        uniqueItems.forEach(item => {
           if (isSupabaseConfigured()) {
             SupabaseService.saveNotification(item).catch(() => {});
           }
@@ -7718,6 +7737,7 @@ class MockDatabase {
   // CORE ENGINE RUNNER: TICK PROCESSOR FOR AUTO-APPROVING ESCALATIONS //
   // Executed on route loads to keep dashboard accurate and confirm real-time operations
   public async runCronEvaluationTick(): Promise<boolean> {
+    if (this.isMutating) return false;
     this.lazyAutoCloseMarathons();
     const now = new Date().toISOString();
     let changesMade = false;
@@ -7884,13 +7904,16 @@ class MockDatabase {
     let sentAny = false;
 
     for (const branchId of branches) {
-      const alreadySentToday = this.notifications.some(
-        (n) =>
-          n.type === "pdg_branch_activity_digest" &&
-          n.branch_id === branchId &&
-          n.created_at.slice(0, 10) === todayKey,
+      const allPdgsSent = pdgs.every((pdg) =>
+        this.notifications.some(
+          (n) =>
+            n.type === "pdg_branch_activity_digest" &&
+            n.branch_id === branchId &&
+            n.recipient_id === pdg.id &&
+            n.created_at.slice(0, 10) === todayKey,
+        ),
       );
-      if (alreadySentToday) continue;
+      if (allPdgsSent) continue;
 
       const newClientsToday = this.profiles.filter(
         (p) => p.role === "client" && p.branch_id === branchId && p.joined_at && p.joined_at.slice(0, 10) === todayKey,
