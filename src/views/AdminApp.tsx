@@ -21188,7 +21188,7 @@ function getAdminAudioContext(): AudioContext | null {
                     <p className="text-xs text-brand-primary/70 leading-relaxed">
                       {descText}
                     </p>
-                    <p className="text-[10px] text-amber-700/80 bg-amber-50/50 rounded-xl p-3 border border-amber-200/40 leading-relaxed">
+                    <p className="text-[10px] text-white bg-[#2A1854] rounded-xl p-3 border border-[#a384d6]/30 leading-relaxed font-medium">
                       {strings.x_confirm_pin_reset_warning || "This will instantly invalidate their current PIN. Please enter a new secure 6-digit PIN below. They will be forced to change it on their next sign-in."}
                     </p>
                   </div>
