@@ -945,6 +945,7 @@ class MockDatabase {
       const dbMarginSubmissions = await SupabaseService.fetchMarginSubmissions(branchId);
       const dbNotifications = await SupabaseService.fetchNotifications(branchId);
       const dbRates = await SupabaseService.fetchCommissionRates();
+      const dbLedger = await SupabaseService.fetchCommissionLedger();
       const dbPolicyLimits = await SupabaseService.fetchPolicyLimits();
       const dbMarathons = await SupabaseService.fetchMarathons();
       const dbBadgeDefinitions = await SupabaseService.fetchBadgeDefinitions();
@@ -1132,6 +1133,22 @@ class MockDatabase {
         this.rates = dbRates;
         updated = true;
       }
+      if (dbLedger !== null) {
+        const ledgerMap = new Map<string, CommissionLedgerEntry>();
+        this.ledger.forEach((l) => ledgerMap.set(l.id, l));
+
+        dbLedger.forEach((remoteL: CommissionLedgerEntry) => {
+          const localL = ledgerMap.get(remoteL.id);
+          if (!localL) {
+            ledgerMap.set(remoteL.id, remoteL);
+          } else {
+            ledgerMap.set(remoteL.id, { ...localL, ...remoteL });
+          }
+        });
+
+        this.ledger = Array.from(ledgerMap.values());
+        updated = true;
+      }
       if (dbPolicyLimits !== null) {
         this.policyLimits = dbPolicyLimits;
         updated = true;
@@ -1197,6 +1214,7 @@ class MockDatabase {
         localStorage.setItem("ng_loans", JSON.stringify(this.loans));
         localStorage.setItem("ng_repayments", JSON.stringify(this.repayments));
         localStorage.setItem("ng_rates", JSON.stringify(this.rates));
+        localStorage.setItem("ng_ledger", JSON.stringify(this.ledger));
         localStorage.setItem("ng_policy_limits", JSON.stringify(this.policyLimits));
         localStorage.setItem("ng_marathons", JSON.stringify(this.marathons));
         localStorage.setItem("ng_badge_definitions", JSON.stringify(this.badgeDefinitions));
@@ -6767,6 +6785,9 @@ class MockDatabase {
     this.syncEntity("badge_award", newAward).catch((err) =>
       console.error("Sync award failed", err),
     );
+    this.syncEntity("commission_ledger", newLedgerEntry).catch((err) =>
+      console.error("Sync ledger failed", err),
+    );
   }
 
   public async evaluateAgentBadgesForMonth(
@@ -6922,6 +6943,9 @@ class MockDatabase {
 
       this.syncEntity("badge_award", newAward).catch((err) =>
         console.error("Sync award failed", err),
+      );
+      this.syncEntity("commission_ledger", newLedgerEntry).catch((err) =>
+        console.error("Sync ledger failed", err),
       );
 
       results.push({
@@ -8036,7 +8060,8 @@ class MockDatabase {
       | "badge_award"
       | "deposit_correction_request"
       | "leave"
-      | "margin_submission",
+      | "margin_submission"
+      | "commission_ledger",
     data: T,
     rollback?: () => void,
   ): Promise<boolean> {
@@ -8075,6 +8100,8 @@ class MockDatabase {
         success = await SupabaseService.saveAgentLeave(data as any);
       } else if (type === "margin_submission" as any) {
         success = await SupabaseService.saveMarginSubmission(data as any);
+      } else if (type === "commission_ledger") {
+        success = await SupabaseService.saveCommissionLedgerEntry(data as any);
       }
 
       if (!success) {
@@ -8246,8 +8273,7 @@ class MockDatabase {
       const earned = Math.round(withdrawalFee * withdrawalCommPct * proportion);
 
       if (earned > 0) {
-        // Push entry to ledger
-        this.ledger.push({
+        const withdrawalLedgerEntry: CommissionLedgerEntry = {
           id: generateUUID(),
           branch_id: tx.branch_id,
           agent_id: agtId,
@@ -8260,7 +8286,14 @@ class MockDatabase {
             deposit_pct: agent.commission_deposit_pct ?? CONFIG.DEFAULT_DEPOSIT_PCT,
             withdrawal_commission_pct: withdrawalCommPct,
           },
-        });
+        };
+
+        // Push entry to ledger
+        this.ledger.push(withdrawalLedgerEntry);
+
+        this.syncEntity("commission_ledger", withdrawalLedgerEntry).catch((err) =>
+          console.error("Sync withdrawal commission ledger failed", err),
+        );
 
         // Notify agent immediately
         this.notifications.unshift({
@@ -8325,7 +8358,7 @@ class MockDatabase {
 
     const commAmount = Math.round(fee * ratePct);
 
-    this.ledger.push({
+    const newLedgerEntry: CommissionLedgerEntry = {
       id: generateUUID(),
       branch_id: client.branch_id,
       agent_id: agent.id,
@@ -8337,7 +8370,13 @@ class MockDatabase {
         recruitment_fee: fee,
         deposit_pct: ratePct,
       },
-    });
+    };
+
+    this.ledger.push(newLedgerEntry);
+
+    this.syncEntity("commission_ledger", newLedgerEntry).catch((err) =>
+      console.error("Sync recruitment commission ledger failed", err),
+    );
 
     this.notifications.unshift({
       id: generateUUID(),

@@ -30,5 +30,5 @@ INSERT INTO profiles (
   now(),
   'NGC-PDG-00001',
   NULL,
-  'ngaccul2026'  -- give this code to Mr. MBAH privately (call/SMS/in person), not over email or chat
+  '89UK-OTLW'  -- give this code to Mr. MBAH privately (call/SMS/in person), not over email or chat
 );

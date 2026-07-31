@@ -608,6 +608,10 @@ export class SupabaseService {
     return this.upsert("commission_ledger", ledger);
   }
 
+  public static async saveCommissionLedgerEntry(entry: CommissionLedgerEntry): Promise<boolean> {
+    return this.saveCommissionLedger([entry]);
+  }
+
   public static async fetchCommissionRates(): Promise<CommissionRate[] | null> {
     return this.selectAll<CommissionRate>("commission_rates");
   }
