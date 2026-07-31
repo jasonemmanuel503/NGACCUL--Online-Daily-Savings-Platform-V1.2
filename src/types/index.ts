@@ -114,6 +114,10 @@ export interface Transaction {
   archived_at?: string;
   archived_by?: string; // Profile id of the branch_admin/pdg who archived it
   archive_batch_id?: string; // groups all txns archived together in one click, for audit lookup
+  original_amount?: number;
+  corrected_amount?: number;
+  corrected_at?: string;
+  corrected_by?: string;
 }
 
 export interface ClientBalance {

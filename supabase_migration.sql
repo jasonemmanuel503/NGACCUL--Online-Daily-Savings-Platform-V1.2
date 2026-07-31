@@ -774,3 +774,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS uniq_pdg_digest_per_branch_per_day
 ON notifications (branch_id, recipient_id, (created_at::date))
 WHERE type = 'pdg_branch_activity_digest';
 
+-- Migration: add correction tracking columns to transactions
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS original_amount NUMERIC DEFAULT NULL;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS corrected_amount NUMERIC DEFAULT NULL;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS corrected_at TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS corrected_by UUID REFERENCES profiles(id) ON DELETE SET NULL;
+

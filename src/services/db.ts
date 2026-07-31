@@ -7303,7 +7303,11 @@ class MockDatabase {
       if (!tx.is_archived) {
         const oldTxProps = { ...tx };
         if (req.requested_amount !== undefined && req.requested_amount !== null) {
+          tx.original_amount = tx.original_amount ?? previousAppliedAmount;
           tx.amount = req.requested_amount;
+          tx.corrected_amount = req.requested_amount;
+          tx.corrected_at = new Date().toISOString();
+          tx.corrected_by = Actor.id;
         }
         tx.status = "confirmed";
         tx.confirmed_at = new Date().toISOString();
@@ -7317,7 +7321,7 @@ class MockDatabase {
           this.saveToStorage();
         });
       } else {
-        // Archived transaction is immutable. Adjust client balance directly for difference.
+        // Archived transaction balance adjustment + amount correction
         const diff = targetAmount - previousAppliedAmount;
         if (diff !== 0) {
           const adjTx = { ...tx, amount: Math.abs(diff) };
@@ -7327,6 +7331,16 @@ class MockDatabase {
             await this.reverseTxFromBalance(adjTx, Math.abs(diff));
           }
         }
+        const oldTxProps = { ...tx };
+        tx.original_amount = tx.original_amount ?? previousAppliedAmount;
+        tx.amount = targetAmount;
+        tx.corrected_amount = targetAmount;
+        tx.corrected_at = new Date().toISOString();
+        tx.corrected_by = Actor.id;
+        await this.syncEntity("transaction", tx, () => {
+          Object.assign(tx, oldTxProps);
+          this.saveToStorage();
+        });
       }
     } else {
       req.rejection_reason = rejectionReason;
