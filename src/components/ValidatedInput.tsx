@@ -32,10 +32,11 @@ export function getFieldStatus(
   validationType?: 'name' | 'phone' | 'cni' | 'email' | 'digits' | 'account_number' | 'pin' | 'custom',
   docType?: string,
   customValidate?: (val: string) => boolean,
-  isTouched: boolean = false
+  isTouched: boolean = false,
+  isRequired: boolean = true
 ): 'neutral' | 'valid' | 'invalid' {
   if (!value || value.trim() === '') {
-    return isTouched ? 'invalid' : 'neutral';
+    return isTouched && isRequired ? 'invalid' : 'neutral';
   }
 
   let valid = false;
@@ -129,7 +130,8 @@ export const ValidatedInput: React.FC<ValidatedInputProps> = ({
   const [touched, setTouched] = useState(false);
   const strVal = String(value || '');
 
-  const status = getFieldStatus(strVal, validationType, docType, customValidate, touched);
+  const isRequired = !!props.required;
+  const status = getFieldStatus(strVal, validationType, docType, customValidate, touched, isRequired);
   const defaultError = getValidationErrorMessage(validationType, docType, errorMessage);
 
   let borderClass = 'border-brand-secondary focus:outline-none focus:ring-1 focus:ring-brand-primary';

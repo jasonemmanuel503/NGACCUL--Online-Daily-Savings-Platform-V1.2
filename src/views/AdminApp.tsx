@@ -3439,7 +3439,7 @@ function getAdminAudioContext(): AudioContext | null {
       return;
     }
 
-    if (!adminFullName || !adminPhone || !adminEmail || !adminNationalId || !adminNationalIdIssuedDate) {
+    if (!adminFullName || !adminPhone || !adminNationalId || !adminNationalIdIssuedDate) {
       showBanner("Please fill in all required fields, including CNI issuance date.", "error");
       setAddAdminError("Please fill in all required fields, including CNI issuance date.");
       return;
@@ -3546,7 +3546,7 @@ function getAdminAudioContext(): AudioContext | null {
       showBanner(`Subdivision '${user.branch_id.toUpperCase()}' is currently locked by PDG padlock. PIN unlock required before onboarding staff.`, "error");
       return;
     }
-    if (!staffFullName || !staffPhone || !staffEmail) {
+    if (!staffFullName || !staffPhone) {
       showBanner(strings.err_fill_required_fields || "Please fill in all required fields.", "error");
       return;
     }
@@ -4054,7 +4054,7 @@ function getAdminAudioContext(): AudioContext | null {
       showBanner(`Subdivision '${user.branch_id.toUpperCase()}' is currently locked by PDG padlock. PIN unlock required before onboarding field agents.`, "error");
       return;
     }
-    if (!agentFullName || !agentDob || !agentPhone || !agentEmail || !agentNationalId || !agentNationalIdIssuedDate || !agentLocality || !agentEducationLevel) {
+    if (!agentFullName || !agentDob || !agentPhone || !agentNationalId || !agentNationalIdIssuedDate || !agentLocality || !agentEducationLevel) {
       showBanner("Please fill in all required agent fields, including CNI issuance date.", "error");
       return;
     }
@@ -14155,7 +14155,6 @@ function getAdminAudioContext(): AudioContext | null {
                           id="onboard-staff-email-input"
                           label={strings.x_email_address || "Email Address"}
                           type="email"
-                          required
                           placeholder={strings.x_eg_gargangacculcom || "e.g. staff@ngaccul.com"}
                           value={staffEmail}
                           validationType="email"
@@ -18504,7 +18503,6 @@ function getAdminAudioContext(): AudioContext | null {
                     id="staff-email-input"
                     label={strings.x_email_address || "Email Address"}
                     type="email"
-                    required
                     placeholder="name@ngaccul.org"
                     value={staffEmail}
                     validationType="email"
@@ -18892,7 +18890,6 @@ function getAdminAudioContext(): AudioContext | null {
                     id="edit-staff-email-input"
                     label={strings.x_email_address || "Email Address"}
                     type="email"
-                    required
                     value={editingStaffProfile.email || ""}
                     validationType="email"
                     onChange={(e) => setEditingStaffProfile({ ...editingStaffProfile, email: e.target.value })}
@@ -19163,7 +19160,6 @@ function getAdminAudioContext(): AudioContext | null {
                     id="agent-email"
                     label={strings.ag_email || "Email Address"}
                     type="email"
-                    required
                     placeholder={strings.ag_email_placeholder || "agent@ngaccul.com"}
                     value={agentEmail}
                     validationType="email"
@@ -19924,7 +19920,6 @@ function getAdminAudioContext(): AudioContext | null {
                     id="edit-agent-email"
                     label="Email"
                     type="email"
-                    required
                     value={editingAgentProfile.email || ""}
                     validationType="email"
                     onChange={(e) => setEditingAgentProfile({ ...editingAgentProfile, email: e.target.value })}
@@ -20217,7 +20212,6 @@ function getAdminAudioContext(): AudioContext | null {
                     id="admin-email-input"
                     label={strings.x_email_address || "Email Address"}
                     type="email"
-                    required
                     placeholder={strings.x_eg_gargangacculcom || "e.g. garga@ngaccul.com"}
                     value={adminEmail}
                     validationType="email"
@@ -20468,7 +20462,6 @@ function getAdminAudioContext(): AudioContext | null {
                     id="edit-admin-email"
                     label={strings.x_email_address || "Email Address"}
                     type="email"
-                    required
                     value={editingAdminProfile.email}
                     validationType="email"
                     onChange={(e) => setEditingAdminProfile({ ...editingAdminProfile, email: e.target.value })}
