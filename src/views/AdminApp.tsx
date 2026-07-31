@@ -2628,6 +2628,14 @@ export const AdminApp: React.FC<AdminAppProps> = ({
   const [bulkRemitCountedCash, setBulkRemitCountedCash] = useState("");
   const [isBulkRemitting, setIsBulkRemitting] = useState(false);
 
+  // Manual Counter Withdrawal Modal state
+  const [showCounterWithdrawalModal, setShowCounterWithdrawalModal] = useState(false);
+  const [counterWithdrawalClientId, setCounterWithdrawalClientId] = useState("");
+  const [counterWithdrawalAmount, setCounterWithdrawalAmount] = useState("");
+  const [counterWithdrawalNote, setCounterWithdrawalNote] = useState("");
+  const [counterWithdrawalSearch, setCounterWithdrawalSearch] = useState("");
+  const [isSubmittingCounterWithdrawal, setIsSubmittingCounterWithdrawal] = useState(false);
+
   // Sorting state for reconciliation tables
   const [reconDepSortField, setReconDepSortField] = useState<"time" | "amount" | "name" | "status" | "method">("time");
   const [reconDepSortAsc, setReconDepSortAsc] = useState(false);
@@ -11149,6 +11157,24 @@ function getAdminAudioContext(): AudioContext | null {
                     }`}
                   >
                     {strings.menu_company_margin || "Company Margin"}
+                  </button>
+                )}
+
+                {(hasPermission("approve_withdrawal") || user.role === "branch_admin" || user.role === "pdg") && (
+                  <button
+                    type="button"
+                    id="btn-record-counter-withdrawal"
+                    onClick={() => {
+                      setShowCounterWithdrawalModal(true);
+                      setCounterWithdrawalClientId("");
+                      setCounterWithdrawalAmount("");
+                      setCounterWithdrawalNote("");
+                      setCounterWithdrawalSearch("");
+                    }}
+                    className="ml-auto px-4 py-2 bg-[#1A7A4A] hover:bg-emerald-800 text-white font-display font-extrabold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                  >
+                    <PlusCircle className="w-4 h-4" />
+                    Record Counter Withdrawal (3% Margin)
                   </button>
                 )}
               </div>
@@ -21614,6 +21640,261 @@ function getAdminAudioContext(): AudioContext | null {
         }}
         onCancel={() => setShowClearDraftConfirm(false)}
       />
+      {showCounterWithdrawalModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in font-sans">
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5 border border-brand-secondary/20 max-h-[90vh] overflow-y-auto custom-scrollbar text-brand-primary text-xs">
+            <div className="flex justify-between items-center pb-3 border-b border-brand-secondary/15">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-50 text-[#1A7A4A] rounded-xl">
+                  <DollarSign className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-display font-extrabold text-sm text-brand-primary">
+                    Record Counter Withdrawal
+                  </h3>
+                  <p className="text-[11px] text-brand-primary/60">
+                    Manual over-the-counter withdrawal (3% company margin applied)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCounterWithdrawalModal(false)}
+                className="p-1.5 hover:bg-brand-surface rounded-xl font-bold cursor-pointer text-brand-primary/60"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!counterWithdrawalClientId) {
+                  showBanner("Please select a client.", "error");
+                  return;
+                }
+                const amt = Number(counterWithdrawalAmount);
+                if (!amt || amt <= 0) {
+                  showBanner("Please enter a valid amount.", "error");
+                  return;
+                }
+                try {
+                  setIsSubmittingCounterWithdrawal(true);
+                  const fee = Math.round(amt * 0.03);
+                  const netPayout = amt - fee;
+                  await dbService.recordManualCounterWithdrawal(
+                    user,
+                    counterWithdrawalClientId,
+                    amt,
+                    counterWithdrawalNote
+                  );
+                  loadSystemData();
+                  setShowCounterWithdrawalModal(false);
+                  showBanner(
+                    `Counter withdrawal of ${amt.toLocaleString()} FCFA recorded! (3% Fee: ${fee.toLocaleString()} FCFA, Net Payout: ${netPayout.toLocaleString()} FCFA).`,
+                    "success"
+                  );
+                } catch (err: any) {
+                  showBanner(`Counter withdrawal failed: ${err.message || err}`, "error");
+                } finally {
+                  setIsSubmittingCounterWithdrawal(false);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-2">
+                <label className="block font-bold text-xs text-brand-primary">
+                  Select Client <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-brand-primary/40 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search client by name, phone, or account ID..."
+                    value={counterWithdrawalSearch}
+                    onChange={(e) => setCounterWithdrawalSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-brand-secondary/20 bg-brand-surface/20 text-xs text-brand-primary focus:outline-none focus:border-[#1A7A4A]"
+                  />
+                </div>
+
+                <div className="max-h-40 overflow-y-auto border border-brand-secondary/15 rounded-xl divide-y divide-brand-surface bg-white">
+                  {(() => {
+                    const eligibleClients = allProfiles.filter((p) => {
+                      if (p.role !== "client") return false;
+                      if (user.role === "branch_admin" && p.branch_id !== user.branch_id) return false;
+                      if (!counterWithdrawalSearch) return true;
+                      const q = counterWithdrawalSearch.toLowerCase();
+                      return (
+                        p.full_name?.toLowerCase().includes(q) ||
+                        p.phone?.includes(q) ||
+                        p.national_id?.toLowerCase().includes(q) ||
+                        p.unique_display_id?.toLowerCase().includes(q) ||
+                        p.account_number?.includes(q) ||
+                        p.id.toLowerCase().includes(q)
+                      );
+                    });
+
+                    if (eligibleClients.length === 0) {
+                      return (
+                        <div className="p-3 text-center text-brand-primary/50 text-[11px]">
+                          No eligible client found.
+                        </div>
+                      );
+                    }
+
+                    return eligibleClients.slice(0, 20).map((cl) => {
+                      const balRec = allBalances.find((b) => b.client_id === cl.id);
+                      const curBal = balRec ? balRec.balance : 0;
+                      const isSelected = counterWithdrawalClientId === cl.id;
+                      return (
+                        <div
+                          key={cl.id}
+                          onClick={() => setCounterWithdrawalClientId(cl.id)}
+                          className={`p-2.5 flex items-center justify-between cursor-pointer transition-colors ${
+                            isSelected ? "bg-emerald-50 border-l-4 border-[#1A7A4A]" : "hover:bg-brand-surface/30"
+                          }`}
+                        >
+                          <div>
+                            <span className="font-bold text-brand-primary block">{cl.full_name}</span>
+                            <span className="text-[10px] text-brand-primary/60 block font-mono">
+                              Phone: {cl.phone} • Branch: {cl.branch_id}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] text-brand-primary/60 block">Savings Balance</span>
+                            <span className="font-extrabold text-xs text-[#1A7A4A] font-numeric">
+                              {curBal.toLocaleString()} FCFA
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+
+              {counterWithdrawalClientId && (() => {
+                const selectedClient = allProfiles.find((p) => p.id === counterWithdrawalClientId);
+                if (!selectedClient) return null;
+                const balRec = allBalances.find((b) => b.client_id === selectedClient.id);
+                const pendingW = allTxns
+                  .filter((t) => t.client_id === selectedClient.id && t.type === "withdrawal" && t.status === "pending")
+                  .reduce((sum, t) => sum + Number(t.amount), 0);
+                const curBal = balRec ? balRec.balance : 0;
+                const lockedAmt = balRec?.locked_amount || 0;
+                const availableBal = curBal - pendingW - lockedAmt;
+
+                const numAmt = Number(counterWithdrawalAmount) || 0;
+                const fee = Math.round(numAmt * 0.03);
+                const netPayout = numAmt - fee;
+                const remainingBal = availableBal - numAmt;
+
+                return (
+                  <div className="bg-brand-surface/30 p-4 rounded-2xl border border-brand-secondary/15 space-y-3 font-numeric">
+                    <div className="flex justify-between items-center border-b border-brand-secondary/10 pb-2">
+                      <div>
+                        <span className="font-extrabold text-sm text-brand-primary">{selectedClient.full_name}</span>
+                        <span className="text-[10px] text-brand-primary/60 block font-mono">ID: {selectedClient.id.slice(0, 8)}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-brand-primary/60 block">Available Balance</span>
+                        <span className="font-extrabold text-sm text-[#1A7A4A]">
+                          {availableBal.toLocaleString()} FCFA
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block font-bold text-xs text-brand-primary">
+                        Withdrawal Amount (FCFA) <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        required
+                        placeholder="e.g. 50000"
+                        value={counterWithdrawalAmount}
+                        onChange={(e) => setCounterWithdrawalAmount(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-brand-secondary/20 bg-white text-xs text-brand-primary font-bold focus:outline-none focus:border-[#1A7A4A]"
+                      />
+                    </div>
+
+                    {numAmt > 0 && (
+                      <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200/60 space-y-1.5 text-xs">
+                        <div className="flex justify-between text-brand-primary/70">
+                          <span>Gross Withdrawal Amount:</span>
+                          <span className="font-bold text-brand-primary font-numeric">{numAmt.toLocaleString()} FCFA</span>
+                        </div>
+                        <div className="flex justify-between text-emerald-800 font-bold">
+                          <span>Company 3% Fee (Margin):</span>
+                          <span className="font-numeric">+{fee.toLocaleString()} FCFA</span>
+                        </div>
+                        <div className="flex justify-between text-brand-primary font-black border-t border-emerald-200/80 pt-1">
+                          <span>Net Cash Payout to Client:</span>
+                          <span className="font-numeric">{netPayout.toLocaleString()} FCFA</span>
+                        </div>
+                        <div className="flex justify-between text-[11px] text-brand-primary/60 pt-0.5">
+                          <span>New Available Balance:</span>
+                          <span className={`font-mono font-bold ${remainingBal < 0 ? "text-rose-600" : "text-brand-primary"}`}>
+                            {remainingBal.toLocaleString()} FCFA
+                          </span>
+                        </div>
+                        {remainingBal < 0 && (
+                          <div className="text-[11px] text-rose-600 font-bold pt-1 flex items-center gap-1">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            Amount exceeds available balance ({availableBal.toLocaleString()} FCFA).
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="space-y-1">
+                      <label className="block font-medium text-[11px] text-brand-primary/70">
+                        Transaction Note (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Client requested cash withdrawal at counter"
+                        value={counterWithdrawalNote}
+                        onChange={(e) => setCounterWithdrawalNote(e.target.value)}
+                        className="w-full px-3 py-1.5 rounded-xl border border-brand-secondary/20 bg-white text-xs text-brand-primary focus:outline-none focus:border-[#1A7A4A]"
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="flex gap-3 justify-end pt-2 border-t border-brand-secondary/15">
+                <button
+                  type="button"
+                  disabled={isSubmittingCounterWithdrawal}
+                  onClick={() => setShowCounterWithdrawalModal(false)}
+                  className="px-4 py-2 border border-brand-secondary/20 rounded-xl text-xs font-bold text-brand-primary/70 hover:bg-brand-surface cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={
+                    isSubmittingCounterWithdrawal ||
+                    !counterWithdrawalClientId ||
+                    !Number(counterWithdrawalAmount) ||
+                    Number(counterWithdrawalAmount) <= 0
+                  }
+                  className="px-5 py-2 bg-[#1A7A4A] hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
+                >
+                  {isSubmittingCounterWithdrawal ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4" />
+                  )}
+                  Confirm Counter Withdrawal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       <GlobalLoading 
         isLoading={isTermsPublishing || isBroadcasting || isRegisteringClient} 
         message={

@@ -4500,6 +4500,116 @@ class MockDatabase {
     });
   }
 
+  public async recordManualCounterWithdrawal(
+    Staff: Profile,
+    clientId: string,
+    amount: number,
+    note?: string,
+  ): Promise<Transaction> {
+    if (
+      Staff.role !== "branch_admin" &&
+      Staff.role !== "pdg" &&
+      !(Staff.permissions || []).includes("approve_withdrawal")
+    ) {
+      throw new Error(
+        "Access Denied: 'approve_withdrawal' permission required to record counter withdrawals."
+      );
+    }
+
+    const client = this.profiles.find((p) => p.id === clientId);
+    if (!client) throw new Error("Client not found.");
+    if (Staff.role === "branch_admin" && client.branch_id !== Staff.branch_id) {
+      throw new Error("Cross-branch violation: RLS restricted.");
+    }
+
+    const clientStatus = client.account_status || (client.is_active ? 'active' : 'inactive');
+    if (clientStatus === 'frozen' || clientStatus === 'inactive') {
+      throw new Error(`Transaction blocked: Account status is currently "${clientStatus}".`);
+    }
+
+    const balanceRec = this.balances.find((b) => b.client_id === client.id);
+    const pendingWithdrawals = this.transactions
+      .filter(
+        (t) =>
+          t.client_id === client.id &&
+          t.type === "withdrawal" &&
+          t.status === "pending"
+      )
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+    const currentBalance = balanceRec ? balanceRec.balance : 0;
+    const lockedAmount = balanceRec && balanceRec.locked_amount ? balanceRec.locked_amount : 0;
+    const availableBalance = currentBalance - pendingWithdrawals - lockedAmount;
+
+    if (availableBalance < amount) {
+      throw new Error(
+        `Insufficient available balance. Current: ${currentBalance.toLocaleString()} FCFA, Available: ${availableBalance.toLocaleString()} FCFA.`
+      );
+    }
+
+    const fee = Math.round(amount * 0.03);
+    const netPayout = amount - fee;
+
+    const tx: Transaction = {
+      id: generateUUID(),
+      branch_id: client.branch_id,
+      client_id: client.id,
+      type: "withdrawal",
+      amount,
+      withdrawal_fee: fee,
+      net_payout: netPayout,
+      payment_method: "counter_cash_manual",
+      status: "confirmed",
+      confirmed_at: new Date().toISOString(),
+      approved_by: Staff.id,
+      created_at: new Date().toISOString(),
+      created_by: Staff.id,
+      note: note || "Recorded manually: client withdrew in person at branch counter (client not yet using in-app withdrawals).",
+    };
+
+    this.transactions.unshift(tx);
+    await this.applyTxToBalance(tx);
+    this.accrueAgentCommission(tx);
+    this.saveToStorage();
+
+    await this.syncEntity("transaction", tx, () => {
+      this.transactions = this.transactions.filter((t) => t.id !== tx.id);
+      this.reverseTxFromBalance(tx, tx.amount);
+      this.saveToStorage();
+    });
+
+    this.writeSystemAudit(
+      client.branch_id,
+      Staff.id,
+      Staff.role,
+      "transactions.manual_counter_withdrawal",
+      "transaction",
+      tx.id,
+      null,
+      tx,
+    );
+
+    const smsBody = `Over-the-counter withdrawal of ${amount.toLocaleString()} FCFA recorded by branch staff (Fee 3%: ${fee.toLocaleString()} FCFA, Net: ${netPayout.toLocaleString()} FCFA).`;
+    this.notifications.unshift({
+      id: generateUUID(),
+      branch_id: client.branch_id,
+      recipient_id: client.id,
+      type: "withdrawal_status_approved",
+      title: "Counter Withdrawal Disbursed",
+      body: smsBody,
+      reference_id: tx.id,
+      is_read: false,
+      created_at: new Date().toISOString(),
+    });
+
+    fetch("/api/sms/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: client.phone, message: smsBody })
+    }).catch(e => console.error("SMS dispatch failed:", e));
+
+    return tx;
+  }
+
   // LOANS MODULE FLOWS (§7) //
   public async createLoanRequest(
     Client: Profile,
