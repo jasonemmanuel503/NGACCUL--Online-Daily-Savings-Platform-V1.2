@@ -2682,7 +2682,6 @@ export const AdminApp: React.FC<AdminAppProps> = ({
 
   useEffect(() => {
     const interval = setInterval(async () => {
-      dbService.runCronEvaluationTick();
       if (isSupabaseConfigured() && !dbService.isMutating) {
         try {
           await dbService.syncFromSupabase();
@@ -2690,6 +2689,7 @@ export const AdminApp: React.FC<AdminAppProps> = ({
           console.error("Interval Supabase sync failed:", e);
         }
       }
+      await dbService.runCronEvaluationTick();
       loadSystemData();
     }, 15000); // 15s is reasonable for an admin desk; MobileApp uses 10s for clients
     return () => clearInterval(interval);

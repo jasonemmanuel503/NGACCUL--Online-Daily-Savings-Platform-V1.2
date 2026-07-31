@@ -7811,6 +7811,16 @@ class MockDatabase {
   }
 
   private async maybeSendPdgDailyDigest(): Promise<boolean> {
+    const sessionStr = localStorage.getItem("ng_session");
+    if (sessionStr) {
+      try {
+        const actor = JSON.parse(sessionStr) as Profile;
+        if (actor && actor.role !== "pdg" && actor.role !== "branch_admin") {
+          return false;
+        }
+      } catch {}
+    }
+
     const pdgs = this.profiles.filter((p) => p.role === "pdg");
     if (pdgs.length === 0) return false;
 

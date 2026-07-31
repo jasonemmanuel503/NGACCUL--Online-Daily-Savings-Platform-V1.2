@@ -521,14 +521,22 @@ function getMobileAudioContext(): AudioContext | null {
 
   // Initial Sync Data loaders
   useEffect(() => {
-    loadMyServiceData();
-    // Run evaluation tick once to auto finalize deposits
-    dbService.runCronEvaluationTick();
+    const initSync = async () => {
+      if (isSupabaseConfigured()) {
+        try {
+          await dbService.syncFromSupabase();
+        } catch (e) {
+          console.error("Initial Supabase sync failed:", e);
+        }
+      }
+      await dbService.runCronEvaluationTick();
+      loadMyServiceData();
+    };
+    initSync();
 
     // Setup an interval to auto finalize deposits during user test session! (Every 10 seconds checking window, extended to 60 seconds if Data Saver is enabled)
     const intervalTime = dataSaverMode ? 60000 : 10000;
     const interval = setInterval(async () => {
-      dbService.runCronEvaluationTick();
       if (isSupabaseConfigured()) {
         try {
           await dbService.syncFromSupabase();
@@ -536,6 +544,7 @@ function getMobileAudioContext(): AudioContext | null {
           console.error("Interval Supabase sync failed:", e);
         }
       }
+      await dbService.runCronEvaluationTick();
       loadMyServiceData();
     }, intervalTime);
 
