@@ -14189,11 +14189,11 @@ function getAdminAudioContext(): AudioContext | null {
                           <label className="text-xs font-bold text-brand-primary/70">
                             Initial Department / Role Preset
                           </label>
-                          <select
+                          <GlassmorphismSelect
                             id="onboard-staff-role-select"
+                            label="Initial Department / Role Preset"
                             value={selectedCustomRoleId ? `custom_${selectedCustomRoleId}` : staffTitle}
-                            onChange={(e) => {
-                              const val = e.target.value;
+                            onChange={(val) => {
                               if (val.startsWith("custom_")) {
                                 const roleId = val.substring(7);
                                 setSelectedCustomRoleId(roleId);
@@ -14211,24 +14211,17 @@ function getAdminAudioContext(): AudioContext | null {
                                 if (val === "cashier") setStaffPermissions(["manage_members", "approve_withdrawal"]);
                               }
                             }}
-                            className="w-full text-xs p-2.5 rounded-xl border border-brand-secondary/30 text-brand-primary focus:outline-none focus:border-brand-accent bg-[#F9F6FE] font-bold"
-                          >
-                            <optgroup label="Standard Roles">
-                              <option value="secretary">{(strings.x_secretary || "Branch Secretary").toUpperCase()}</option>
-                              <option value="finance">{(strings.x_finance || "Branch Finance Director").toUpperCase()}</option>
-                              <option value="accountant">{(strings.x_accountant || "Internal Accountant").toUpperCase()}</option>
-                              <option value="cashier">{(strings.x_cashier || "Teller/Cashier").toUpperCase()}</option>
-                            </optgroup>
-                            {allRoles.length > 0 && (
-                              <optgroup label="Custom Roles">
-                                {allRoles.map((r) => (
-                                  <option key={r.id} value={`custom_${r.id}`}>
-                                    {r.role_name.toUpperCase()}
-                                  </option>
-                                ))}
-                              </optgroup>
-                            )}
-                          </select>
+                            options={[
+                              { value: "secretary", label: (strings.x_secretary || "Branch Secretary").toUpperCase() },
+                              { value: "finance", label: (strings.x_finance || "Branch Finance Director").toUpperCase() },
+                              { value: "accountant", label: (strings.x_accountant || "Internal Accountant").toUpperCase() },
+                              { value: "cashier", label: (strings.x_cashier || "Teller/Cashier").toUpperCase() },
+                              ...allRoles.map((r) => ({
+                                value: `custom_${r.id}`,
+                                label: `★ ${r.role_name.toUpperCase()}`
+                              }))
+                            ]}
+                          />
                         </div>
                       ) : (
                         <div className="space-y-4">
@@ -18617,10 +18610,10 @@ function getAdminAudioContext(): AudioContext | null {
                   <>
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold uppercase tracking-wider text-brand-primary/70">{strings.x_corporate_office_title || "Corporate Office Title"}</label>
-                      <select
+                      <GlassmorphismSelect
+                        label={strings.x_corporate_office_title || "Corporate Office Title"}
                         value={selectedCustomRoleId ? `custom_${selectedCustomRoleId}` : staffTitle}
-                        onChange={(e) => {
-                          const val = e.target.value;
+                        onChange={(val) => {
                           if (val.startsWith("custom_")) {
                             const roleId = val.substring(7);
                             setSelectedCustomRoleId(roleId);
@@ -18638,24 +18631,17 @@ function getAdminAudioContext(): AudioContext | null {
                             if (val === "cashier") setStaffPermissions(["manage_members", "approve_withdrawal"]);
                           }
                         }}
-                        className="w-full text-xs p-2.5 rounded-xl border border-brand-secondary/30 text-brand-primary focus:outline-none focus:border-brand-accent bg-[#F9F6FE]"
-                      >
-                        <optgroup label="Standard Roles">
-                          <option value="secretary">{(strings.x_secretary || "Branch Secretary").toUpperCase()}</option>
-                          <option value="finance">{(strings.x_finance || "Branch Finance Director").toUpperCase()}</option>
-                          <option value="accountant">{(strings.x_accountant || "Internal Accountant").toUpperCase()}</option>
-                          <option value="cashier">{(strings.x_cashier || "Front-desk Teller / Cashier").toUpperCase()}</option>
-                        </optgroup>
-                        {dbService.getCustomRoles().length > 0 && (
-                          <optgroup label="Custom Roles (RBAC)">
-                            {dbService.getCustomRoles().map((role) => (
-                              <option key={role.id} value={`custom_${role.id}`}>
-                                {role.role_name.toUpperCase()}
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                      </select>
+                        options={[
+                          { value: "secretary", label: (strings.x_secretary || "Branch Secretary").toUpperCase() },
+                          { value: "finance", label: (strings.x_finance || "Branch Finance Director").toUpperCase() },
+                          { value: "accountant", label: (strings.x_accountant || "Internal Accountant").toUpperCase() },
+                          { value: "cashier", label: (strings.x_cashier || "Front-desk Teller / Cashier").toUpperCase() },
+                          ...dbService.getCustomRoles().map((role) => ({
+                            value: `custom_${role.id}`,
+                            label: `★ ${role.role_name.toUpperCase()}`
+                          }))
+                        ]}
+                      />
                     </div>
 
                     <div className="space-y-2 bg-brand-surface/30 p-3.5 rounded-2xl border border-brand-secondary/10">
